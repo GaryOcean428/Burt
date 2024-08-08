@@ -6,21 +6,18 @@ from typing import Dict, Any, List
 import re
 import logging
 from models import get_model_list
-from config import ROUTER_THRESHOLD, HIGH_TIER_MODEL, MID_TIER_MODEL, LOW_TIER_MODEL
+from config import ROUTER_THRESHOLD
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 class AdvancedRouter:
     def __init__(self):
         self.models = get_model_list()
-        self.local_model = "llama3.1:8b"
+        self.local_model = "llama3.1-8b"
         self.threshold = ROUTER_THRESHOLD
 
-    def route(
-        self, query: str, conversation_history: List[Dict[str, str]]
-    ) -> Dict[str, Any]:
+    def route(self, query: str, conversation_history: List[Dict[str, str]]) -> Dict[str, Any]:
         """
         Determine the best model, parameters, and response strategy for the given query and conversation history.
         """
@@ -40,9 +37,7 @@ class AdvancedRouter:
             f"Selected {config['model']} based on complexity ({complexity:.2f}) and context length ({context_length} chars). Threshold: {self.threshold}"
         )
         config["question_type"] = question_type
-        config["response_strategy"] = self._get_response_strategy(
-            question_type, task_type
-        )
+        config["response_strategy"] = self._get_response_strategy(question_type, task_type)
 
         config = self._adjust_params_based_on_history(config, conversation_history)
 
@@ -68,9 +63,7 @@ class AdvancedRouter:
         )
         return min(complexity, 1.0)
 
-    def _calculate_context_length(
-        self, conversation_history: List[Dict[str, str]]
-    ) -> int:
+    def _calculate_context_length(self, conversation_history: List[Dict[str, str]]) -> int:
         """
         Calculate the total length of the conversation history.
         """
@@ -81,9 +74,7 @@ class AdvancedRouter:
         Identify the type of task based on the query.
         """
         query_lower = query.lower()
-        if any(
-            word in query_lower for word in ["code", "program", "function", "debug"]
-        ):
+        if any(word in query_lower for word in ["code", "program", "function", "debug"]):
             return "coding"
         elif any(word in query_lower for word in ["analyze", "compare", "evaluate"]):
             return "analysis"
@@ -133,14 +124,12 @@ class AdvancedRouter:
         Get configuration for low-tier model processing.
         """
         config = {
-            "model": LOW_TIER_MODEL,
+            "model": "llama3.1-8b",
             "max_tokens": 256,
             "temperature": 0.5,
         }
         if task_type == "casual":
-            config["temperature"] = (
-                0.7  # Increase temperature for more varied casual responses
-            )
+            config["temperature"] = 0.7  # Increase temperature for more varied casual responses
         return config
 
     def _get_mid_tier_config(self, task_type: str) -> Dict[str, Any]:
@@ -148,7 +137,7 @@ class AdvancedRouter:
         Get configuration for mid-tier model processing.
         """
         config = {
-            "model": MID_TIER_MODEL,
+            "model": "llama3.1-70b",
             "max_tokens": 512,
             "temperature": 0.7,
         }
@@ -161,7 +150,7 @@ class AdvancedRouter:
         Get configuration for high-tier model processing.
         """
         config = {
-            "model": HIGH_TIER_MODEL,
+            "model": "llama3.1-405b",
             "max_tokens": 1024,
             "temperature": 0.9,
         }
@@ -169,9 +158,7 @@ class AdvancedRouter:
             config["temperature"] = 0.7  # Lower temperature for more precise outputs
         return config
 
-    def _adjust_params_based_on_history(
-        self, config: Dict[str, Any], conversation_history: List[Dict[str, str]]
-    ) -> Dict[str, Any]:
+    def _adjust_params_based_on_history(self, config: Dict[str, Any], conversation_history: List[Dict[str, str]]) -> Dict[str, Any]:
         """
         Adjust parameters based on conversation history.
         """
@@ -179,22 +166,14 @@ class AdvancedRouter:
             # For longer conversations, slightly increase temperature for more varied responses
             config["temperature"] = min(config["temperature"] * 1.1, 1.0)
 
-        if any(
-            msg["content"].lower().startswith("please explain")
-            for msg in conversation_history[-3:]
-        ):
+        if any(msg["content"].lower().startsWith("please explain") for msg in conversation_history[-3:]):
             # If recent messages ask for explanations, increase max_tokens
             config["max_tokens"] = int(config["max_tokens"] * 1.2)
 
         # Check for rapid back-and-forth exchanges
-        if len(conversation_history) >= 4 and all(
-            len(msg["content"].split()) < 10 for msg in conversation_history[-4:]
-        ):
-            config["max_tokens"] = max(
-                128, int(config["max_tokens"] * 0.8)
-            )  # Reduce max_tokens for quicker responses
+        if len(conversation_history) >= 4 and all(len(msg["content"].split()) < 10 for msg in conversation_history[-4:]):
+            config["max_tokens"] = max(128, int(config["max_tokens"] * 0.8))  # Reduce max_tokens for quicker responses
 
         return config
-
 
 advanced_router = AdvancedRouter()
