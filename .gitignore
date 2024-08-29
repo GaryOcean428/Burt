@@ -1,23 +1,178 @@
-**/.DS_Store
-**/.env
-**/__pycache__/
+# Environment variables
+.env
 
+# Dependency directories
+node_modules/
+vendor/
 
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyp
+*.pyt
+*.pyw
 
-# Ignore all contents of the virtual environment directory
-.venv/*
+# Python virtual environments
+venv/
+ENV/
+.venv/
+*.virtualenv
+*.pyenv
+pipenv/
 
-# Ignore all contents of the directory "work_dir"
-work_dir/*
-# But do not ignore the directory itself
-!work_dir/.gitkeep
+# Python egg files
+*.egg
+*.egg-info/
+dist/
+eggs/
+parts/
+sdist/
+var/
+wheels/
+.installed.cfg
+*.egg-info/
+pip-log.txt
 
-# Ignore all contents of the directory "memory"
-memory/*
-# But do not ignore the directory itself
-!memory/.gitkeep
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
 
-# Ignore all contents of the directory "logs"
+# Python packaging
+*.wheel
+.Python
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+*.log
+*.log.*
+*.out
+*.err
+
+# Compiled source
+*.class
+*.dll
+*.exe
+*.o
+*.so
+
+# Packages
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.xz
+
+# IDEs and editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Database files
+*.sqlite
+*.db
+*.db-journal
+*.sqlite3
+
+# Build directories
+build/
+dist/
+target/
+site/
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*.swn
+*.swm
+
+# Coverage reports
+coverage/
+*.lcov
+.nyc_output/
+
+# System files
+*.pid
+*.seed
+*.pid.lock
+
+# Other
+mongodb-compass.deb
+.deb
+
+# Specific to agent-zero project
+# If you're using Docker
+docker-compose.yml
+.dockerignore
+Dockerfile
+Dockerfile.*
+
+# Flask and Django project specific
+*.env
+instance/
+.webassets-cache
+*.mo
+*.pot
+
+# Static files
+staticfiles/
+mediafiles/
+
+# TypeScript specific (if applicable)
+*.tsbuildinfo
+
+# Logs and crash reports
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+pids/
+*.seed
+*.pid.lock
+
+# Pylint
+pylint-report.txt
+
+# Pyright
+pyrightconfig.json
+
+# Generated documentation
+docs/_build/
+site/
+
+# VS Code specific settings (optional)
+.vscode/*
+
+# Coverage reports
+coverage/
+coverage.*
+.cache/
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+.tox/
 logs/*
-# But do not ignore the directory itself
-!logs/.gitkeep
+memory\database\*
+work_dir/*
+memory/database/*

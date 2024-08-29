@@ -11,6 +11,7 @@ from python.helpers.tool import Tool, Response
 from python.helpers import files
 from python.helpers.print_style import PrintStyle
 
+
 class Knowledge(Tool):
     def execute(self, question="", **kwargs):
         with concurrent.futures.ThreadPoolExecutor() as executor:
@@ -18,11 +19,14 @@ class Knowledge(Tool):
 
             # perplexity search, if API provided
             if os.getenv("API_KEY_PERPLEXITY"):
-                perplexity = executor.submit(perplexity_search.perplexity_search, question)
-            else: 
-                PrintStyle.hint("No API key provided for Perplexity. Skipping Perplexity search.")
+                perplexity = executor.submit(
+                    perplexity_search.perplexity_search, question
+                )
+            else:
+                PrintStyle.hint(
+                    "No API key provided for Perplexity. Skipping Perplexity search."
+                )
                 perplexity = None
-                
 
             # duckduckgo search
             duckduckgo = executor.submit(duckduckgo_search.search, question)
@@ -35,10 +39,13 @@ class Knowledge(Tool):
             duckduckgo_result = duckduckgo.result()
             memory_result = future_memory.result()
 
-        msg = files.read_file("prompts/tool.knowledge.response.md", 
-                              online_sources = perplexity_result + "\n\n" + str(duckduckgo_result),
-                              memory = memory_result )
+        msg = files.read_file(
+            "prompts/tool.knowledge.response.md",
+            online_sources=perplexity_result + "\n\n" + str(duckduckgo_result),
+            memory=memory_result,
+        )
 
-        if self.agent.handle_intervention(msg): pass # wait for intervention and handle it, if paused
+        if self.agent.handle_intervention(msg):
+            pass  # wait for intervention and handle it, if paused
 
         return Response(message=msg, break_loop=False)
