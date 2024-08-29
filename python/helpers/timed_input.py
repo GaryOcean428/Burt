@@ -1,11 +1,9 @@
-from inputimeout import inputimeout, TimeoutOccurred
+import readline
 
 
-def timeout_input(prompt, timeout=10):
+def timeout_input(prompt, timeout=None):
     try:
-        import readline
-
-        user_input = inputimeout(prompt=prompt, timeout=timeout)
+        user_input = input(prompt)
         return user_input
-    except TimeoutOccurred:
+    except KeyboardInterrupt:
         return ""

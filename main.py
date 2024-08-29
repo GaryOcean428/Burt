@@ -3,6 +3,8 @@ import os
 import threading
 import time
 import models
+import atexit
+import signal
 from ansio import application_keypad
 from ansio.input import InputEvent, get_input_event
 from agent import Agent, AgentConfig
@@ -10,6 +12,7 @@ from python.helpers.print_style import PrintStyle
 from python.helpers.files import read_file
 from python.helpers import files
 import python.helpers.timed_input as timed_input
+from python.tools.memory_tool import Memory, initialize as init_memory
 
 print(f"Python version: {sys.version}")
 print(f"Python executable: {sys.executable}")
@@ -28,10 +31,11 @@ CHAT_MODELS = {
     "Azure OpenAI": ["gpt-4o-mini"],
     "Anthropic": ["claude-3-5-sonnet-20240620"],
     "Google": ["gemini-1.5-flash"],
-    "Groq": ["llama-3.1-70b-versatile", "llama-3.1-70b", "llama-3.1-70b-base"]
+    "Groq": ["llama-3.1-70b-versatile", "llama-3.1-70b", "llama-3.1-70b-base"],
 }
 
 EMBEDDING_MODELS = ["text-embedding-3-small", "text-embedding-ada-002"]
+
 
 def select_model(model_type, available_models):
     print(f"\nAvailable {model_type} models:")
@@ -41,12 +45,14 @@ def select_model(model_type, available_models):
         for i, model in enumerate(models_list, len(all_models) + 1):
             print(f"{i}. {model}")
         all_models.extend(models_list)
-    
+
     print(f"\n{len(all_models) + 1}. Enter custom model")
-    
+
     while True:
         try:
-            choice = int(input(f"\nSelect a {model_type} model (1-{len(all_models) + 1}): "))
+            choice = int(
+                input(f"\nSelect a {model_type} model (1-{len(all_models) + 1}): ")
+            )
             if 1 <= choice <= len(all_models):
                 return all_models[choice - 1]
             elif choice == len(all_models) + 1:
@@ -55,6 +61,7 @@ def select_model(model_type, available_models):
                 print("Invalid choice. Please try again.")
         except ValueError:
             print("Invalid input. Please enter a number.")
+
 
 def get_model_instance(model_name):
     if model_name in CHAT_MODELS["OpenAI"]:
@@ -77,10 +84,11 @@ def get_model_instance(model_name):
         print(f"Warning: Using default OpenAI chat for custom model {model_name}")
         return models.get_openai_chat(model_name=model_name, temperature=0)
 
+
 def initialize():
     # Select chat model
     chat_model_name = select_model("chat", CHAT_MODELS)
-    
+
     # Select embedding model
     embedding_model_name = select_model("embedding", {"Embedding": EMBEDDING_MODELS})
 
@@ -111,8 +119,17 @@ def initialize():
     # create the first agent
     agent = Agent(number=0, config=config)
 
+    # Initialize memory
+    init_memory(agent)
+
     print("Initialization successful!")
     return agent  # Return the created agent instead of exiting
+
+
+def save_memory_state(agent, message):
+    memory_tool = Memory()
+    memory_tool.execute(agent=agent, memorize=message)
+
 
 # Main conversation loop
 def chat(agent: Agent):
@@ -168,6 +185,10 @@ def chat(agent: Agent):
         ).print(f"{agent.agent_name}: response:")
         PrintStyle(font_color="white").print(f"{assistant_response}")
 
+        # Save memory state after each interaction
+        save_memory_state(agent, f"User: {user_input}\nAssistant: {assistant_response}")
+
+
 # User intervention during agent streaming
 def intervention():
     if not Agent.streaming_agent or Agent.paused:
@@ -190,6 +211,7 @@ def intervention():
         )
     Agent.paused = False  # continue agent streaming
 
+
 # Capture keyboard input to trigger user intervention
 def capture_keys():
     global input_lock
@@ -207,9 +229,26 @@ def capture_keys():
                     intervent = True
                     continue
 
+
 # User input with timeout
-def timeout_input(prompt, timeout=10):
+def timeout_input(prompt, timeout=None):
     return timed_input.timeout_input(prompt=prompt, timeout=timeout)
+
+
+def save_memory(agent):
+    memory_tool = Memory()
+    memory_tool.execute(agent=agent, memorize="Session ended. Saving memory state.")
+
+
+# Signal handler for graceful shutdown
+def signal_handler(signum, frame):
+    print("\nInterrupt received, saving memory state and exiting...")
+    save_memory(agent)
+    sys.exit(0)
+
+
+# Register the save_memory function to be called when the program exits
+atexit.register(save_memory, agent=None)
 
 if __name__ == "__main__":
     print("Initializing framework...")
@@ -219,6 +258,13 @@ if __name__ == "__main__":
 
     # Start the initialization and get the created agent
     agent = initialize()
+
+    # Update the atexit function with the created agent
+    atexit.unregister(save_memory)
+    atexit.register(save_memory, agent=agent)
+
+    # Register signal handler for graceful shutdown
+    signal.signal(signal.SIGINT, signal_handler)
 
     # Start the main conversation loop
     chat(agent)
