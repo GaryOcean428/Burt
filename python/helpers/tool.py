@@ -1,8 +1,9 @@
 from abc import abstractmethod
-from typing import TypedDict
+from typing import Callable
 from agent import Agent
 from python.helpers.print_style import PrintStyle
 from python.helpers import files, messages
+from functools import wraps
 
 
 class Response:
@@ -14,7 +15,11 @@ class Response:
 class Tool:
 
     def __init__(
-        self, agent: Agent, name: str, args: dict[str, str], message: str, **kwargs
+        self,
+        agent: Agent,
+        name: str,
+        args: dict[str, str],
+        message: str,
     ) -> None:
         self.agent = agent
         self.name = name
@@ -22,10 +27,10 @@ class Tool:
         self.message = message
 
     @abstractmethod
-    def execute(self, **kwargs) -> Response:
+    def execute(self) -> Response:
         pass
 
-    def before_execution(self, **kwargs):
+    def before_execution(self):
         if self.agent.handle_intervention():
             return  # wait for intervention and handle it, if paused
         PrintStyle(
@@ -34,7 +39,7 @@ class Tool:
         if self.args and isinstance(self.args, dict):
             for key, value in self.args.items():
                 PrintStyle(font_color="#85C1E9", bold=True).stream(
-                    self.nice_key(key) + ": "
+                    f"{self.nice_key(key)}: "
                 )
                 PrintStyle(
                     font_color="#85C1E9",
@@ -42,7 +47,7 @@ class Tool:
                 ).stream(value)
                 PrintStyle().print()
 
-    def after_execution(self, response: Response, **kwargs):
+    def after_execution(self, response: Response):
         text = messages.truncate_text(
             response.message.strip(), self.agent.config.max_tool_response_length
         )
@@ -59,6 +64,20 @@ class Tool:
 
     def nice_key(self, key: str):
         words = key.split("_")
-        words = [words[0].capitalize()] + [word.lower() for word in words[1:]]
-        result = " ".join(words)
-        return result
+        return " ".join([words[0].capitalize()] + [word.lower() for word in words[1:]])
+
+
+def tool(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(
+        agent: Agent,
+        args: dict[str, str],
+        message: str,
+    ) -> Response:
+        tool_instance = Tool(agent, func.__name__, args, message)
+        tool_instance.before_execution()
+        response = func(tool_instance)
+        tool_instance.after_execution(response)
+        return response
+
+    return wrapper
