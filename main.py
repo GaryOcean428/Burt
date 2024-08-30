@@ -7,12 +7,19 @@ from agent import Agent, AgentConfig
 from python.helpers import files
 from python.tools.memory_tool import initialize as init_memory
 from python.tools.helper_agent_tool import call_helper_agents
+from langchain_openai import ChatOpenAI
+from langchain_anthropic import ChatAnthropic
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_community.chat_models import ChatOllama
+from langchain_openai import OpenAIEmbeddings
+from dotenv import load_dotenv
 
 print(f"Python version: {sys.version}")
 print(f"Python executable: {sys.executable}")
 print(f"sys.path: {sys.path}")
 print(f"Current working directory: {os.getcwd()}")
 
+load_dotenv()  # Load environment variables from .env file
 input_lock = threading.Lock()
 os.chdir(files.get_abs_path("./work_dir"))  # change CWD to work_dir
 
@@ -58,10 +65,18 @@ def select_model(model_type, available_models):
 
 
 def get_model_instance(model_name):
-    # This function should be implemented
-    # to return the appropriate model instance
-    # based on the selected model_name. For now, we'll return a placeholder.
-    return f"Model instance for {model_name}"
+    if "gpt" in model_name:
+        return ChatOpenAI(model_name=model_name)
+    elif "claude" in model_name:
+        return ChatAnthropic(model=model_name)
+    elif "gemini" in model_name:
+        return ChatGoogleGenerativeAI(model=model_name)
+    elif "gemma" in model_name or "mistral" in model_name.lower():
+        return ChatOllama(model=model_name)
+    elif "text-embedding" in model_name:
+        return OpenAIEmbeddings(model=model_name)
+    else:
+        raise ValueError(f"Unsupported model: {model_name}")
 
 
 def initialize():
