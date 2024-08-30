@@ -58,7 +58,8 @@ def select_model(model_type, available_models):
 
 
 def get_model_instance(model_name):
-    # This function should be implemented to return the appropriate model instance
+    # This function should be implemented
+    # to return the appropriate model instance
     # based on the selected model_name. For now, we'll return a placeholder.
     return f"Model instance for {model_name}"
 
@@ -123,8 +124,18 @@ def capture_keys():
 
 
 def chat(agent):
-    # Implement the chat logic here
-    pass
+    print("\nStarting chat session. Type 'exit' to end the conversation.")
+    while True:
+        user_input = input("\nYou: ")
+        if user_input.lower() == "exit":
+            print("Ending chat session.")
+            break
+
+        # Process user input and get a response from the agent
+        try:
+            agent.message_loop(user_input)
+        except Exception as e:
+            print(f"Error: An exception occurred while processing your input. {str(e)}")
 
 
 if __name__ == "__main__":

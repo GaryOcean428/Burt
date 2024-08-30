@@ -5,9 +5,11 @@ from python.helpers.rate_limiter import RateLimiter
 
 
 class HelperAgent:
-    def __init__(self, model: str, rate_limit: int):
+    def __init__(
+        self, model: str, rate_limit: int, max_input_tokens: int, max_output_tokens: int
+    ):
         self.model = model
-        self.rate_limiter = RateLimiter(rate_limit)
+        self.rate_limiter = RateLimiter(rate_limit, max_input_tokens, max_output_tokens)
 
     def process(self, task: str) -> str:
         with self.rate_limiter:
@@ -17,9 +19,15 @@ class HelperAgent:
 
 
 helper_agents = [
-    HelperAgent("groq-base", 10),  # 10 requests per minute
-    HelperAgent("groq-small", 15),  # 15 requests per minute
-    HelperAgent("groq-large", 5),  # 5 requests per minute
+    HelperAgent(
+        "groq-base", 10, 1000, 500
+    ),  # 10 requests per minute, 1000 input tokens, 500 output tokens
+    HelperAgent(
+        "groq-small", 15, 1500, 750
+    ),  # 15 requests per minute, 1500 input tokens, 750 output tokens
+    HelperAgent(
+        "groq-large", 5, 2000, 1000
+    ),  # 5 requests per minute, 2000 input tokens, 1000 output tokens
 ]
 
 
