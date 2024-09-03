@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent Interface</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+    <h1>AI Agent Interface</h1>
+    <input type="text" id="userInput" placeholder="Enter your query">
+    <button onclick="sendQuery()">Send</button>
+    <div id="response"></div>
+
+    <script>
+        function sendQuery() {
+            const userInput = document.getElementById('userInput').value;
+            axios.post('/query', { query: userInput })
+                .then(function (response) {
+                    document.getElementById('response').innerText = response.data.response;
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        }
+    </script>
+</body>
+</html>

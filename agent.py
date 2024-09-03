@@ -9,7 +9,8 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.language_models.llms import BaseLLM
 from langchain_core.embeddings import Embeddings
-
+from langchain.prompts import PromptTemplate
+from langchain_core.runnables import RunnableSequence
 
 @dataclass
 class AgentConfig:
@@ -78,7 +79,26 @@ class Agent:
         )
         self.data = {}  # free data object all the tools can use
 
-        os.chdir(files.get_abs_path("./work_dir"))  # change CWD to work_dir
+        self.planner = self.create_planner()
+        self.executor = self.create_executor()
+
+    def create_planner(self):
+        planner_prompt = PromptTemplate(
+            input_variables=["objective"],
+            template="Given the objective: {objective}\n"
+                     "Create a step-by-step plan to achieve this objective. "
+                     "Consider using available tools and sub-agents if necessary."
+        )
+        return RunnableSequence(planner_prompt | self.config.utility_model)
+
+    def create_executor(self):
+        executor_prompt = PromptTemplate(
+            input_variables=["plan", "step"],
+            template="Given the plan: {plan}\n"
+                     "Execute the following step: {step}\n"
+                     "Provide the result of this step's execution."
+        )
+        return RunnableSequence(executor_prompt | self.config.chat_model)
 
     def message_loop(self, msg: str):
         try:
@@ -89,15 +109,17 @@ class Agent:
             )  # Append the user's input to the history
             memories = self.fetch_memories(True)
 
+            attempts = 0
+            max_attempts = 3
+
             while (
-                True
-            ):  # let the agent iterate on his thoughts until he stops by using a tool
+                attempts < max_attempts
+            ):  # let the agent iterate on his thoughts until he stops by using a tool or max attempts reached
                 Agent.streaming_agent = self  # mark self as current streamer
                 agent_response = ""
                 self.intervention_status = False  # reset interventon status
 
                 try:
-
                     system = self.system_prompt + "\n\n" + self.tools_prompt
                     memories = self.fetch_memories()
                     if memories:
@@ -129,18 +151,11 @@ class Agent:
                         if self.handle_intervention(agent_response):
                             break  # wait for intervention and handle it, if paused
 
-                        if isinstance(chunk, str):
-                            content = chunk
-                        elif hasattr(chunk, "content"):
-                            content = str(chunk.content)
-                        else:
-                            content = str(chunk)
+                        content = self.extract_content(chunk)
 
                         if content:
                             printer.stream(content)  # output the agent response stream
-                            agent_response += (
-                                content  # concatenate stream into the response
-                            )
+                            agent_response += content  # concatenate stream into the response
 
                     self.rate_limiter.set_output_tokens(int(len(agent_response) / 4))
 
@@ -158,7 +173,6 @@ class Agent:
                             PrintStyle(font_color="orange", padding=True).print(
                                 warning_msg
                             )
-
                         else:  # otherwise proceed with tool
                             self.append_message(
                                 agent_response
@@ -169,7 +183,8 @@ class Agent:
                             if tools_result:
                                 return tools_result  # break the execution if the task is done
 
-                # Forward errors to the LLM, maybe he can fix them
+                    attempts += 1
+
                 except Exception as e:
                     error_message = errors.format_error(e)
                     msg_response = files.read_file(
@@ -177,9 +192,24 @@ class Agent:
                     )  # error message template
                     self.append_message(msg_response, human=True)
                     PrintStyle(font_color="red", padding=True).print(msg_response)
+                    attempts += 1
+
+            # If we've reached max attempts, inform the user
+            if attempts >= max_attempts:
+                error_msg = f"I apologize, but I'm having trouble processing your request after {max_attempts} attempts. Could you please rephrase or provide more information?"
+                self.append_message(error_msg, human=False)
+                return error_msg
 
         finally:
             Agent.streaming_agent = None  # unset current streamer
+
+    def extract_content(self, chunk):
+        if isinstance(chunk, str):
+            return chunk
+        elif hasattr(chunk, "content"):
+            return str(chunk.content)
+        else:
+            return str(chunk)
 
     def get_data(self, field: str):
         return self.data.get(field, None)

@@ -145,3 +145,16 @@ def get_embedding_hf(model_name="sentence-transformers/all-MiniLM-L6-v2"):
 def get_embedding_openai(api_key=None):
     api_key = api_key or get_api_key("openai")
     return OpenAIEmbeddings(api_key=api_key)  # type: ignore
+
+def get_model_list():
+    return [
+        "llama3.1-8b",
+        "llama3.1-70b",
+        "llama3.1-405b",
+        "gpt-3.5-turbo",
+        "gpt-4",
+        "gpt-4-turbo",
+        "claude-2",
+        "claude-instant-1",
+        "gemini-pro"
+    ]

@@ -1,6 +1,12 @@
+name: agent-zero
+channels:
+  - defaults
+  - conda-forge
 dependencies:
-  - jupyter
-  - matplotlib
-  - numpy
-  - psycopg2
-  - pylint
+  - python=3.12
+  - flask
+  - langchain==0.1.0
+  - langchain-community==0.0.13
+  - pip
+  - pip:
+    - any-other-pip-packages

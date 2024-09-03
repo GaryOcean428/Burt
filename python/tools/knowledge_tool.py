@@ -13,6 +13,11 @@ from python.helpers.print_style import PrintStyle
 
 
 class Knowledge(Tool):
+    def before_execution(self, question="", **kwargs):
+        # This method is called before execute. We can use it to validate or preprocess the question.
+        if not question:
+            raise ValueError("A question must be provided for the Knowledge tool.")
+
     def execute(self, question="", **kwargs):
         with concurrent.futures.ThreadPoolExecutor() as executor:
             # Schedule the two functions to be run in parallel
@@ -49,3 +54,7 @@ class Knowledge(Tool):
             pass  # wait for intervention and handle it, if paused
 
         return Response(message=msg, break_loop=False)
+
+    def after_execution(self, response):
+        # This method is called after execute. We can use it for any post-processing if needed.
+        pass

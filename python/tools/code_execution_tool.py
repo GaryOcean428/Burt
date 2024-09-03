@@ -21,8 +21,17 @@ class State:
 
 class CodeExecution(Tool):
 
-    def execute(self, **kwargs):
+    def before_execution(self, runtime="", code="", **kwargs):
+        # Validate the runtime argument
+        valid_runtimes = ["python", "nodejs", "terminal", "output"]
+        if runtime.lower().strip() not in valid_runtimes:
+            raise ValueError(f"Invalid runtime. Must be one of: {', '.join(valid_runtimes)}")
+        
+        # Validate the code argument
+        if runtime != "output" and not code:
+            raise ValueError("Code must be provided for execution")
 
+    def execute(self, runtime="", code="", **kwargs):
         if self.agent.handle_intervention():
             return Response(
                 message="", break_loop=False
@@ -30,15 +39,13 @@ class CodeExecution(Tool):
 
         self.prepare_state()
 
-        # os.chdir(files.get_abs_path("./work_dir")) #change CWD to work_dir
-
-        runtime = self.args["runtime"].lower().strip()
+        runtime = runtime.lower().strip()
         if runtime == "python":
-            response = self.execute_python_code(self.args["code"])
+            response = self.execute_python_code(code)
         elif runtime == "nodejs":
-            response = self.execute_nodejs_code(self.args["code"])
+            response = self.execute_nodejs_code(code)
         elif runtime == "terminal":
-            response = self.execute_terminal_command(self.args["code"])
+            response = self.execute_terminal_command(code)
         elif runtime == "output":
             response = self.get_terminal_output()
         else:
