@@ -1,4 +1,5 @@
 {
     "python.analysis.typeCheckingMode": "standard",
-    "flake8.importStrategy": "fromEnvironment"
+    "flake8.importStrategy": "fromEnvironment",
+    "python.analysis.autoImportCompletions": true
 }
