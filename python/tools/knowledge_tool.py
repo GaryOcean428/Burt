@@ -1,93 +1,39 @@
-from agent import Agent
+from app.agent import Agent, AgentConfig  # Update the import path as needed
 from . import online_knowledge_tool
 from python.helpers import perplexity_search
 from python.helpers import duckduckgo_search
-
 from . import memory_tool
 import concurrent.futures
+import os
 
 from python.helpers.tool import Tool, Response
 from python.helpers import files
 from python.helpers.print_style import PrintStyle
+from python.helpers import rate_limiter  # Update this import
 
-class Agent:
-
-    paused = False
-    streaming_agent = None
-
-    def __init__(self, number: int, config: AgentConfig):
-
-        # agent config
-        self.config = config
-
-        # non-config vars
-        self.number = number
-        self.agent_name = f"Agent {self.number}"
-
-        system_prompt_template = files.read_file("./prompts/agent.system.md")
-        self.system_prompt = self.format_template(system_prompt_template, agent_name=self.agent_name)
-
-        self.tools_prompt = files.read_file("./prompts/agent.tools.md")
-
-        self.history = []
-        self.last_message = ""
-        self.intervention_message = ""
-        self.intervention_status = False
-        from .helpers import rate_limiter  # Use relative import
+class KnowledgeTool(Tool):
+    def __init__(self, agent: Agent):
+        super().__init__(agent)
         self.rate_limiter = rate_limiter.RateLimiter(
-            max_calls=self.config.rate_limit_requests,
-            max_input_tokens=self.config.rate_limit_input_tokens,
-            max_output_tokens=self.config.rate_limit_output_tokens,
-            window_seconds=self.config.rate_limit_seconds,
-        )
-        self.data = {}  # free data object all the tools can use
-
-        self.planner = self.create_planner()
-        self.executor = self.create_executor()
-
-class Knowledge(Tool):
-    def before_execution(self, question="", **kwargs):
-        # This method is called before execute. We can use it to validate or preprocess the question.
-        if not question:
-            raise ValueError("A question must be provided for the Knowledge tool.")
-
-    def execute(self, question="", **kwargs):
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            # Schedule the two functions to be run in parallel
-
-            # perplexity search, if API provided
-            if os.getenv("API_KEY_PERPLEXITY"):
-                perplexity = executor.submit(
-                    perplexity_search.perplexity_search, question
-                )
-            else:
-                PrintStyle.hint(
-                    "No API key provided for Perplexity. Skipping Perplexity search."
-                )
-                perplexity = None
-
-            # duckduckgo search
-            duckduckgo = executor.submit(duckduckgo_search.search, question)
-
-            # memory search
-            future_memory = executor.submit(memory_tool.search, self.agent, question)
-
-            # Wait for both functions to complete
-            perplexity_result = (perplexity.result() if perplexity else "") or ""
-            duckduckgo_result = duckduckgo.result()
-            memory_result = future_memory.result()
-
-        msg = files.read_file(
-            "prompts/tool.knowledge.response.md",
-            online_sources=perplexity_result + "\n\n" + str(duckduckgo_result),
-            memory=memory_result,
+            max_calls=self.agent.config.rate_limit_requests,
+            max_input_tokens=self.agent.config.rate_limit_input_tokens,
+            max_output_tokens=self.agent.config.rate_limit_output_tokens,
+            window_seconds=self.agent.config.rate_limit_seconds,
         )
 
-        if self.agent.handle_intervention(msg):
-            pass  # wait for intervention and handle it, if paused
+    def execute(self, question: str, **kwargs):
+        if self.agent.handle_intervention():
+            return Response("", break_loop=False)
 
-        return Response(message=msg, break_loop=False)
+        # Implement the knowledge tool logic here
+        # Use the rate_limiter, perplexity_search, duckduckgo_search, and memory_tool as needed
 
-    def after_execution(self, response):
-        # This method is called after execute. We can use it for any post-processing if needed.
-        pass
+        # Example implementation:
+        with self.rate_limiter:
+            memory_result = memory_tool.search(self.agent, question)
+            online_result = online_knowledge_tool.search(question)
+
+        combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"
+        return Response(combined_result, break_loop=False)
+
+# Remove the duplicate Agent class definition

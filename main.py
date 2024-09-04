@@ -55,9 +55,6 @@ def chat(agent):
         if user_input.lower() == "exit":
             print("Exiting chat...")
             break
-        model_name = router.select_model(user_input)
-        params = router.adjust_parameters(model_name, user_input)
-        agent.config.chat_model = get_model(model_name, **params)
         response = agent.process(user_input)
         print(f"{agent.agent_name}: {response}")
 

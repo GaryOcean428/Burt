@@ -3,7 +3,10 @@ from collections import deque
 from dataclasses import dataclass
 from typing import List, Tuple
 from .print_style import PrintStyle
+from dotenv import load_dotenv
+import os
 
+load_dotenv()
 
 @dataclass
 class CallRecord:
@@ -22,6 +25,7 @@ class RateLimiter:
         self.input_tokens = 0
         self.output_tokens = 0
         self.start_time = time.time()
+        self.call_records = deque()  # Add this line to initialize call_records
 
     def check_and_update(self):
         current_time = time.time()
@@ -91,7 +95,7 @@ class RateLimiter:
 
 
 # Example usage
-rate_limiter = RateLimiter(max_calls=5, max_input_tokens=1000, max_output_tokens=2000)
+rate_limiter = RateLimiter(max_calls=5, max_input_tokens=1000, max_output_tokens=2000, window_seconds=60)
 
 
 def rate_limited_function(input_token_count: int, output_token_count: int):
