@@ -1,5 +1,5 @@
 import re
-from agent import Agent
+from app.agent import Agent
 from python.helpers.vector_db import VectorDB, Document
 from python.helpers import files
 import os, json
@@ -36,14 +36,12 @@ class Memory(Tool):
         # result = process_query(self.agent, self.args["memory"],self.args["action"], result_count=self.agent.config.auto_memory_count)
         return Response(message=result, break_loop=False)
 
-
 def search(agent: Agent, query: str, count: int = 5, threshold: float = 0.1):
     initialize(agent)
     docs = db.search_similarity_threshold(query, count, threshold)  # type: ignore
     if len(docs) == 0:
         return files.read_file("./prompts/fw.memories_not_found.md", query=query)
-    else:
-        return str(docs)
+    return str(docs)
 
 
 def save(agent: Agent, text: str):
@@ -79,3 +77,8 @@ def initialize(agent: Agent):
 def extract_guids(text):
     pattern = r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b"
     return re.findall(pattern, text)
+
+
+def initialize():
+    # Initialization code here
+    pass

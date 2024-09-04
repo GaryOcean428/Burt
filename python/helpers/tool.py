@@ -1,6 +1,6 @@
 from abc import abstractmethod
 from typing import Callable
-from agent import Agent
+from app.agent import Agent  # Updated import statement
 from python.helpers.print_style import PrintStyle
 from python.helpers import files, messages
 from functools import wraps

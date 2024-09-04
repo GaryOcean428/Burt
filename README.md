@@ -10,9 +10,79 @@
 - Agent Zero is fully transparent, readable, comprehensible, customizable and interactive.
 - Agent Zero uses the computer as a tool to accomplish its (your) tasks.
 
-## Key concepts
+## Project Overview
 
-(... content unchanged ...)
+Agent Zero is a sophisticated AI agent framework designed to facilitate the creation and management of multiple agents with hierarchical relationships.
+
+## Project Structure
+
+The project is organized as follows:
+
+- `app/agent.py`: Contains the `Agent` class and its configuration.
+- `python/tools/call_subordinate.py`: Implements the `Delegation` tool for managing subordinate agents.
+- `python/helpers`: Contains various helper modules.
+
+## Setup Instructions
+
+### Prerequisites
+
+- Python 3.12
+- Docker (for code execution in a Docker container)
+- SSH (for remote code execution)
+
+### Installation
+
+1. Clone the repository:
+
+    ```sh
+    git clone https://github.com/yourusername/agent-zero.git
+    cd agent-zero
+    ```
+
+2. Create a virtual environment and activate it:
+
+    ```sh
+    python -m venv venv
+    source venv/bin/activate  # On Windows use `venv\Scripts\activate`
+    ```
+
+3. Install the dependencies:
+
+    ```sh
+    pip install -r requirements.txt
+    ```
+
+4. Ensure Docker is running and properly configured.
+
+### Configuration
+
+Update the `AgentConfig` in `app/agent.py` as needed. Here is an example configuration:
+
+```
+agent-zero/
+├── app/
+│   ├── __init__.py
+│   ├── main.py
+│   ├── advanced_router.py
+│   ├── agent.py
+│   ├── config.py
+│   ├── models.py
+│   └── python/
+│       ├── helpers/
+│       │   ├── __init__.py
+│       │   ├── extract_tools.py
+│       │   ├── errors.py
+│       │   └── ... (other helper modules)
+│       └── tools/
+│           ├── __init__.py
+│           └── ... (tool modules)
+├── docs/
+├── prompts/
+├── templates/
+├── .env
+├── requirements.txt
+└── README.md
+```
 
 ## Setup
 
@@ -45,7 +115,7 @@
 4. **Run Agent Zero:**
 
    ```cmd
-   python main.py
+   python app/main.py
    ```
 
 ### For WSL (Windows Subsystem for Linux) Users
@@ -76,7 +146,7 @@
 4. **Run Agent Zero:**
 
    ```bash
-   python main.py
+   python app/main.py
    ```
 
 ### Additional Setup Steps
@@ -86,7 +156,7 @@
    - Chat models and embedding models can be executed locally via Ollama and HuggingFace or via API as well.
 
 2. **Choose your chat, utility and embeddings model:**
-   - In the `main.py` file, at the start of the `chat()` function, you can see how the chat model and embedding model are set.
+   - In the `app/config.py` file, you can configure the chat model and embedding model settings.
    - You can choose between online models (OpenAI, Anthropic, Groq) or offline (Ollama, HuggingFace) for both.
 
 3. **Run Docker (Optional):**
@@ -108,7 +178,7 @@ For any persistent issues, please open an issue on the GitHub repository or seek
 - In your configured environment (Windows or WSL), navigate to the project directory and run:
 
   ```bash
-  python main.py
+  python app/main.py
   ```
 
 - Or run it in debug mode in VS Code using the "debug" button in the top right corner of the editor. Config files for VS Code are provided for this purpose.

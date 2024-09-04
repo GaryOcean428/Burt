@@ -1,4 +1,3 @@
-import os
 from agent import Agent
 from . import online_knowledge_tool
 from python.helpers import perplexity_search
@@ -11,6 +10,40 @@ from python.helpers.tool import Tool, Response
 from python.helpers import files
 from python.helpers.print_style import PrintStyle
 
+class Agent:
+
+    paused = False
+    streaming_agent = None
+
+    def __init__(self, number: int, config: AgentConfig):
+
+        # agent config
+        self.config = config
+
+        # non-config vars
+        self.number = number
+        self.agent_name = f"Agent {self.number}"
+
+        system_prompt_template = files.read_file("./prompts/agent.system.md")
+        self.system_prompt = self.format_template(system_prompt_template, agent_name=self.agent_name)
+
+        self.tools_prompt = files.read_file("./prompts/agent.tools.md")
+
+        self.history = []
+        self.last_message = ""
+        self.intervention_message = ""
+        self.intervention_status = False
+        from .helpers import rate_limiter  # Use relative import
+        self.rate_limiter = rate_limiter.RateLimiter(
+            max_calls=self.config.rate_limit_requests,
+            max_input_tokens=self.config.rate_limit_input_tokens,
+            max_output_tokens=self.config.rate_limit_output_tokens,
+            window_seconds=self.config.rate_limit_seconds,
+        )
+        self.data = {}  # free data object all the tools can use
+
+        self.planner = self.create_planner()
+        self.executor = self.create_executor()
 
 class Knowledge(Tool):
     def before_execution(self, question="", **kwargs):

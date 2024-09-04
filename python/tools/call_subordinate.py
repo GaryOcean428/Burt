@@ -1,4 +1,4 @@
-from agent import Agent
+from app.agent import Agent
 from python.helpers.tool import Tool, Response
 from python.helpers import files
 from python.helpers.print_style import PrintStyle
