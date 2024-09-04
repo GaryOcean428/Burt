@@ -1,0 +1,65 @@
+prompts:
+- category: Code Generation and Refactoring
+  prompts:
+  - description: Generate a Python function that performs a specific task with error
+      handling and optimization.
+    name: Code Generation
+    prompt: Generate a Python function that performs [specific task]. The function
+      should include error handling, be optimized for performance, and use comments
+      to explain each step.
+  - description: Refactor existing code for readability and efficiency.
+    name: Code Refactoring
+    prompt: 'Refactor the following code to improve readability and efficiency without
+      changing its functionality: [insert code snippet]. Provide a brief explanation
+      of the changes made.'
+- category: Debugging Assistance
+  prompts:
+  - description: Identify bugs and suggest solutions for code snippets.
+    name: Debugging
+    prompt: 'Identify and explain the bug in the following code snippet: [insert code
+      snippet]. Suggest a solution to fix the issue and improve the code''s robustness.'
+- category: Documentation and Explanation
+  prompts:
+  - description: Create detailed documentation for functions, including usage examples.
+    name: Documentation
+    prompt: 'Create comprehensive documentation for the following function, including
+      a description, parameters, return values, and examples of usage: [insert function
+      code].'
+  - description: Explain code functionality in simple terms.
+    name: Code Explanation
+    prompt: 'Explain the purpose and functionality of the following code block in
+      simple terms: [insert code snippet]. Include any assumptions made by the code.'
+- category: Testing and Validation
+  prompts:
+  - description: Generate unit test cases with edge case coverage.
+    name: Test Case Generation
+    prompt: 'Generate a set of unit test cases for the following function using the
+      unittest framework. Ensure edge cases are considered: [insert function code].'
+  - description: Validate function output and suggest improvements if discrepancies
+      are found.
+    name: Validation
+    prompt: 'Validate the output of the following function against expected results.
+      Provide a detailed report of any discrepancies and suggest improvements: [insert
+      function code and expected results].'
+- category: Feature Implementation
+  prompts:
+  - description: Design and outline steps to implement a new feature.
+    name: Feature Design
+    prompt: Design a new feature for the application that allows users to [describe
+      feature]. Outline the steps needed for implementation and any potential challenges.
+  - description: Integrate a feature into an existing codebase with minimal disruption.
+    name: Feature Integration
+    prompt: 'Integrate the following feature into the existing codebase. Provide a
+      step-by-step guide on how to merge it with minimal disruption: [describe feature
+      and provide code].'
+- category: Optimization and Performance
+  prompts:
+  - description: Analyze and suggest optimizations for performance improvement.
+    name: Performance Optimization
+    prompt: 'Analyze the performance of the following code and suggest optimizations
+      to reduce execution time and memory usage: [insert code snippet].'
+  - description: Propose an improved algorithm with better time complexity.
+    name: Algorithm Improvement
+    prompt: 'Propose an improved algorithm for the following problem that reduces
+      time complexity. Provide a comparison with the current solution: [describe problem
+      and current solution].'
