@@ -1,14 +1,21 @@
-from crawlee import PuppeteerCrawler
+import requests
+from bs4 import BeautifulSoup
+
 
 def crawl_website(url: str) -> str:
-    async def crawler_handler(page, request):
-        title = await page.title()
-        return f"Crawled {request.url} with title: {title}"
+    try:
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
+        title = soup.title.string if soup.title else "No title found"
+        return f"Crawled {url} with title: {title}"
+    except Exception as e:
+        return f"Error crawling {url}: {str(e)}"
 
-    crawler = PuppeteerCrawler()
-    crawler.run([url], crawler_handler)
-    return f"Crawled {url}"
 
 class WebCrawlerTool:
+    def __init__(self, agent):
+        self.agent = agent
+        self.name = "web_crawler_tool"
+
     def execute(self, url: str) -> str:
         return crawl_website(url)

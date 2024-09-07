@@ -5,6 +5,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def get_abs_path(relative_path):
     """
     Convert a relative path to an absolute path.
@@ -23,12 +24,19 @@ def get_abs_path(relative_path):
         raise ValueError("Relative path cannot be empty or None")
 
     try:
-        abs_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', relative_path))
-        logger.info(f"Converted relative path '{relative_path}' to absolute path '{abs_path}'")
+        abs_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), "..", "..", "..", relative_path)
+        )
+        logger.info(
+            f"Converted relative path '{relative_path}' to absolute path '{abs_path}'"
+        )
         return abs_path
     except Exception as e:
-        logger.error(f"Error converting relative path '{relative_path}' to absolute path: {str(e)}")
+        logger.error(
+            f"Error converting relative path '{relative_path}' to absolute path: {str(e)}"
+        )
         raise
+
 
 def read_file(file_path):
     """
@@ -49,12 +57,13 @@ def read_file(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")
 
     try:
-        with open(file_path, 'r') as file:
+        with open(file_path, "r") as file:
             content = file.read()
         logger.info(f"Successfully read file: {file_path}")
         return content
     except IOError as e:
         logger.error(f"Error reading file '{file_path}': {str(e)}")
         raise
+
 
 # Add more file-related functions as needed

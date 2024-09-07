@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "burton"
+version = "0.1.0"
+description = ""
+authors = ["Gary Ocean"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "app"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+flask = "*"
+flask-cors = "*"
+python-dotenv = "*"
+langchain = "*"
+langchain-openai = "*"
+langchain-community = "*"
+langchain-anthropic = "*"
+langchain-groq = "*"
+langchain-huggingface = "*"
+langchain-google-genai = "*"
+openai = "*"
+anthropic = "*"
+groq = "*"
+huggingface-hub = "*"
+google-generativeai = "*"
+beautifulsoup4 = "*"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

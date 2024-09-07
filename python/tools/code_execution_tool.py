@@ -25,7 +25,9 @@ class CodeExecution(Tool):
         # Validate the runtime argument
         valid_runtimes = ["python", "nodejs", "terminal", "output"]
         if runtime.lower().strip() not in valid_runtimes:
-            raise ValueError(f"Invalid runtime. Must be one of: {', '.join(valid_runtimes)}")
+            raise ValueError(
+                f"Invalid runtime. Must be one of: {', '.join(valid_runtimes)}"
+            )
 
         # Validate the code argument
         if runtime != "output" and not code:

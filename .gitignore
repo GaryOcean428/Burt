@@ -1,5 +1,6 @@
 # Environment variables
 .env
+.devcontainer/.env
 
 # Dependency directories
 node_modules/
@@ -179,3 +180,7 @@ logs/*
 memory\database\*
 work_dir/*
 memory/database/*
+
+# Archive folder and its subfolders
+archive/
+archive/**

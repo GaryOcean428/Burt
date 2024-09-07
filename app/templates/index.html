@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agent99 Premium</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/core.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github-dark.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .chat-gradient { background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%); }
+    </style>
+</head>
+<body class="bg-gray-50 h-screen flex overflow-hidden">
+    <!-- Sidebar -->
+    <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
+        <div class="p-4 border-b border-gray-200">
+            <h1 class="text-2xl font-bold text-gray-800">Agent99</h1>
+        </div>
+        <div class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-2" id="chatHistory">
+            <!-- Chat history will be populated here -->
+        </div>
+        <div class="p-4 border-t border-gray-200">
+            <button id="newChatBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out shadow-md">New Chat</button>
+        </div>
+    </div>
+
+    <!-- Main chat area -->
+    <div class="flex-1 flex flex-col bg-white">
+        <div class="p-4 border-b border-gray-200 flex items-center bg-white">
+            <img src="/api/placeholder/40/40" alt="Agent99 avatar" class="w-10 h-10 rounded-full mr-3">
+            <div>
+                <h2 class="font-semibold text-gray-800">Agent99</h2>
+                <p class="text-sm text-gray-500">AI Assistant</p>
+            </div>
+        </div>
+        <div id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6">
+            <!-- Chat messages will be appended here -->
+        </div>
+        <div class="chat-gradient h-24 w-full absolute bottom-16 pointer-events-none"></div>
+        <div class="bg-white border-t border-gray-200 p-4">
+            <div class="max-w-4xl mx-auto flex items-center bg-white rounded-lg shadow-md">
+                <input type="text" id="userInput" placeholder="Message Agent99..." class="flex-grow p-3 rounded-l-lg focus:outline-none">
+                <button id="sendButton" class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition duration-150 ease-in-out">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatContainer = document.getElementById('chatContainer');
+            const chatHistory = document.getElementById('chatHistory');
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const newChatBtn = document.getElementById('newChatBtn');
+
+            function appendMessage(sender, message) {
+                const messageElement = document.createElement('div');
+                messageElement.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+
+                const contentElement = document.createElement('div');
+                contentElement.className = `max-w-2xl ${sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'} rounded-lg p-4 shadow-md`;
+
+                contentElement.innerHTML = marked.parse(message);
+
+                messageElement.appendChild(contentElement);
+                chatContainer.appendChild(messageElement);
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                // Highlight code blocks
+                messageElement.querySelectorAll('pre code').forEach((block) => {
+                    hljs.highlightElement(block);
+                });
+
+                // Add to chat history
+                const historyItem = document.createElement('div');
+                historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
+                historyItem.innerHTML = `<p class="font-medium text-gray-800">${sender === 'user' ? 'You' : 'Agent99'}</p><p class="text-sm text-gray-500 truncate">${message}</p>`;
+                chatHistory.insertBefore(historyItem, chatHistory.firstChild);
+            }
+
+            function sendQuery() {
+                const message = userInput.value.trim();
+                if (message) {
+                    appendMessage('user', message);
+                    userInput.value = '';
+
+                    fetch('/query', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ query: message }),
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        appendMessage('ai', data.response);
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        appendMessage('ai', 'An error occurred while processing your request.');
+                    });
+                }
+            }
+
+            // Event listeners
+            userInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendQuery();
+                }
+            });
+
+            sendButton.addEventListener('click', sendQuery);
+
+            newChatBtn.addEventListener('click', function() {
+                chatContainer.innerHTML = '';
+                appendMessage('ai', 'Hello! How can I assist you today?');
+            });
+
+            // Add some initial chat history for demonstration
+            ['How do I set up the development environment?', 'Can you explain the key features of Agent99?', 'What\'s the best way to integrate external APIs?', 'How can I optimize my code for performance?'].forEach(msg => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
+                historyItem.innerHTML = `<p class="font-medium text-gray-800">You</p><p class="text-sm text-gray-500 truncate">${msg}</p>`;
+                chatHistory.appendChild(historyItem);
+            });
+        });
+    </script>
+</body>
+</html>

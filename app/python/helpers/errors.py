@@ -2,23 +2,32 @@ import re
 import traceback
 from typing import Optional
 
+
 class AgentZeroException(Exception):
     """Base exception class for AgentZero project."""
+
     def __init__(self, message: str, original_exception: Optional[Exception] = None):
         super().__init__(message)
         self.original_exception = original_exception
 
+
 class ToolExecutionError(AgentZeroException):
     """Exception raised when a tool execution fails."""
+
     pass
+
 
 class ConfigurationError(AgentZeroException):
     """Exception raised when there's a configuration issue."""
+
     pass
+
 
 class APIError(AgentZeroException):
     """Exception raised when an API call fails."""
+
     pass
+
 
 def format_error(e: Exception, max_entries: int = 2) -> str:
     """
@@ -43,7 +52,7 @@ def format_error(e: Exception, max_entries: int = 2) -> str:
 
     if file_indices:
         start_index = max(0, len(file_indices) - max_entries)
-        trimmed_lines = lines[file_indices[start_index]:]
+        trimmed_lines = lines[file_indices[start_index] :]
     else:
         return traceback_text
 
@@ -58,6 +67,7 @@ def format_error(e: Exception, max_entries: int = 2) -> str:
         result += f"\n\n{error_message}"
 
     return result
+
 
 def handle_exception(e: Exception, context: str = "") -> str:
     """

@@ -8,6 +8,7 @@ import os
 
 load_dotenv()
 
+
 @dataclass
 class CallRecord:
     timestamp: float
@@ -35,7 +36,11 @@ class RateLimiter:
             self.output_tokens = 0
             self.start_time = current_time
 
-        if self.calls < self.max_calls and self.input_tokens < self.max_input_tokens and self.output_tokens < self.max_output_tokens:
+        if (
+            self.calls < self.max_calls
+            and self.input_tokens < self.max_input_tokens
+            and self.output_tokens < self.max_output_tokens
+        ):
             self.calls += 1
             return True
         return False
@@ -95,7 +100,9 @@ class RateLimiter:
 
 
 # Example usage
-rate_limiter = RateLimiter(max_calls=5, max_input_tokens=1000, max_output_tokens=2000, window_seconds=60)
+rate_limiter = RateLimiter(
+    max_calls=5, max_input_tokens=1000, max_output_tokens=2000, window_seconds=60
+)
 
 
 def rate_limited_function(input_token_count: int, output_token_count: int):

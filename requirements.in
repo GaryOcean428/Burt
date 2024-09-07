@@ -1,35 +1,45 @@
-arrow
-aiohttp
-anthropic
-anyio
-backoff
-bcrypt
-cachetools
-certifi
-chardet
-chromadb
+# This file contains the main requirements for the project.
+# Version specifications have been removed to allow pip-compile to handle versioning.
+
+# Development tools
+pip-tools
 click
-dataclasses-json
-duckduckgo_search
-groq
-httpx
-huggingface-hub
+
+# Core dependencies
 langchain
-langchain-anthropic
-langchain-chroma
-langchain-community
 langchain-core
-langchain-google-genai
+langchain-anthropic
+langchain-community
+langchain-openai
 langchain-groq
 langchain-huggingface
-langchain-openai
-numpy
+langchain-google-genai
+
+# Other dependencies
+aiohappyeyeballs
+aiohttp
+ansio
+anthropic
+beautifulsoup4
+docker
+duckduckgo-search
+faiss-cpu
+flask
+flask-cors
+google-generativeai
+groq
+inputimeout
 openai
+paramiko
 pydantic
-pydantic-settings
 python-dotenv
+pynput
 requests
-tiktoken
-tqdm
-typing-extensions
+sentence-transformers
+typing
 webcolors
+
+# Note: After updating this file, run the following commands:
+# 1. pip install pip-tools
+# 2. pip-compile requirements.in
+# 3. pip install -r requirements.txt

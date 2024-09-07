@@ -36,6 +36,7 @@ class Memory(Tool):
         # result = process_query(self.agent, self.args["memory"],self.args["action"], result_count=self.agent.config.auto_memory_count)
         return Response(message=result, break_loop=False)
 
+
 def search(agent: Agent, query: str, count: int = 5, threshold: float = 0.1):
     initialize(agent)
     docs = db.search_similarity_threshold(query, count, threshold)  # type: ignore

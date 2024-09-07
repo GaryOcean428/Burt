@@ -1,18 +1,18 @@
-# Agent Zero
+# Burton
 
 [![Join our Discord](https://img.shields.io/badge/Discord-Join%20our%20server-5865F2?style=for-the-badge&logo=discord&logoColor=white)](https://discord.gg/B8KZKNsPpj) [![Subscribe on YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@AgentZeroFW) [![Connect on LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-blue?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/jan-tomasek/) [![Follow on X.com](https://img.shields.io/badge/X.com-Follow-1DA1F2?style=for-the-badge&logo=x&logoColor=white)](https://x.com/JanTomasekDev)
 
 [![Intro Video](/docs/intro_vid.jpg)](https://www.youtube.com/watch?v=C9n8zFpaV3I)
 
-**Personal and organic AI framework**
+## Personal and organic AI framework
 
-- Agent Zero is not a predefined agentic framework. It is designed to be dynamic, organically growing, and learning as you use it.
-- Agent Zero is fully transparent, readable, comprehensible, customizable and interactive.
-- Agent Zero uses the computer as a tool to accomplish its (your) tasks.
+- Burton is not a predefined agentic framework. It is designed to be dynamic, organically growing, and learning as you use it.
+- Burton is fully transparent, readable, comprehensible, customizable and interactive.
+- Burton uses the computer as a tool to accomplish its (your) tasks.
 
 ## Project Overview
 
-Agent Zero is a sophisticated AI agent framework designed to facilitate the creation and management of multiple agents with hierarchical relationships.
+Burton is a sophisticated AI agent framework designed to facilitate the creation and management of multiple agents with hierarchical relationships.
 
 ## Project Structure
 
@@ -21,6 +21,7 @@ The project is organized as follows:
 - `app/agent.py`: Contains the `Agent` class and its configuration.
 - `python/tools/call_subordinate.py`: Implements the `Delegation` tool for managing subordinate agents.
 - `python/helpers`: Contains various helper modules.
+- `app/tests/test_agent.py`: Contains the test suite for the Agent class.
 
 ## Setup Instructions
 
@@ -35,8 +36,8 @@ The project is organized as follows:
 1. Clone the repository:
 
     ```sh
-    git clone https://github.com/yourusername/agent-zero.git
-    cd agent-zero
+    git clone https://github.com/GaryOcean428/Burt.git
+    cd burton
     ```
 
 2. Create a virtual environment and activate it:
@@ -58,8 +59,9 @@ The project is organized as follows:
 
 Update the `AgentConfig` in `app/agent.py` as needed. Here is an example configuration:
 
-```
-agent-zero/
+```tree
+
+burton/
 ├── app/
 │   ├── __init__.py
 │   ├── main.py
@@ -86,21 +88,60 @@ agent-zero/
 
 ## Setup
 
-### For Windows Users (Preferred Method)
+### For All Users (Recommended Method)
 
 1. **Install Python:**
-   - Download and install the latest version of Python from [python.org](https://www.python.org/downloads/)
+   - Download and install Python 3.12 or later from [python.org](https://www.python.org/downloads/)
    - During installation, make sure to check "Add Python to PATH"
 
+2. **Install Poetry:**
+   - Follow the installation instructions for Poetry from the [official documentation](https://python-poetry.org/docs/#installation)
+
+3. **Set up the project:**
+   Open a terminal (Command Prompt on Windows, Terminal on macOS/Linux) and run:
+
+   ```bash
+   git clone https://github.com/yourusername/burton.git
+   cd burton
+   poetry install
+   ```
+
+4. **Activate the virtual environment:**
+
+   ```bash
+   poetry shell
+   ```
+
+5. **Set up environment variables:**
+   - Copy the `example.env` file to `.env`:
+
+     ```bash
+     cp example.env .env  # On Windows, use: copy example.env .env
+     ```
+
+   - Open the `.env` file and fill in your API keys and other configuration details
+
+6. **Run the application:**
+
+   ```bash
+   poetry run python app/main.py
+   ```
+
+### For Windows Users (Alternative Method)
+
+If you prefer using Anaconda, follow these steps:
+
+1. **Install Anaconda:**
+   - Download and install Anaconda from [anaconda.com](https://www.anaconda.com/products/distribution)
+
 2. **Set up the project:**
-   Open Command Prompt and run:
+   Open Anaconda Prompt and run:
 
    ```cmd
-   git clone https://github.com/yourusername/agent-zero.git
-   cd agent-zero
-   python -m venv venv
-   venv\Scripts\activate
-   pip install -r requirements.txt
+   git clone https://github.com/yourusername/burton.git
+   cd burton
+   conda env create -f environment.yml
+   conda activate burton_env
    ```
 
 3. **Set up environment variables:**
@@ -110,68 +151,45 @@ agent-zero/
      copy example.env .env
      ```
 
-   - Edit the `.env` file with your preferred text editor and add your API keys.
+   - Open the `.env` file and fill in your API keys and other configuration details
 
-4. **Run Agent Zero:**
+4. **Run the application:**
 
    ```cmd
    python app/main.py
    ```
 
-### For WSL (Windows Subsystem for Linux) Users
+## Development
 
-1. **Install WSL:**
-   - Follow the [official Microsoft guide](https://docs.microsoft.com/en-us/windows/wsl/install) to install WSL 2 with Ubuntu.
+To add new dependencies to the project:
 
-2. **Set up the project:**
-   Open a WSL terminal and run:
+```bash
+poetry add package_name
+```
 
-   ```bash
-   git clone https://github.com/yourusername/agent-zero.git
-   cd agent-zero
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
+To update dependencies:
 
-3. **Set up environment variables:**
-   - Copy the `example.env` file to `.env`:
+```bash
+poetry update
+```
 
-     ```bash
-     cp example.env .env
-     ```
+To run tests (if available):
 
-   - Edit the `.env` file with your preferred text editor and add your API keys.
-
-4. **Run Agent Zero:**
-
-   ```bash
-   python app/main.py
-   ```
-
-### Additional Setup Steps
-
-1. **Required API keys:**
-   - At the moment, the only recommended API key is for <https://www.perplexity.ai/> API. Perplexity is used as a convenient web search tool and has not yet been replaced by an open-source alternative. If you do not have an API key for Perplexity, leave it empty in the .env file and Perplexity will not be used.
-   - Chat models and embedding models can be executed locally via Ollama and HuggingFace or via API as well.
-
-2. **Choose your chat, utility and embeddings model:**
-   - In the `app/config.py` file, you can configure the chat model and embedding model settings.
-   - You can choose between online models (OpenAI, Anthropic, Groq) or offline (Ollama, HuggingFace) for both.
-
-3. **Run Docker (Optional):**
-   - If you want to use the Docker container, install Docker Desktop and run it. The framework will handle the rest.
+```bash
+poetry run pytest
+```
 
 ## Troubleshooting
 
-If you encounter any issues:
+### Rate Limiting
 
-1. Make sure you're running the correct Python version (3.8+) in your environment.
-2. Verify that all dependencies are correctly installed.
-3. Check that your API keys are correctly set in the `.env` file.
-4. If using WSL, ensure you're running the script from the WSL terminal, not the Windows Command Prompt.
+If you encounter a "rate limit exceeded" error, the application will automatically retry the request up to 3 times. If the issue persists, please wait a few minutes before trying again or check your OpenAI API usage limits.
 
-For any persistent issues, please open an issue on the GitHub repository or seek help on our Discord server.
+### OpenAI Models
+
+This project uses GPT-4o as the default chat model and GPT-4o-mini as the utility model. Make sure your OpenAI API key has access to these models. You can configure different models by setting the OPENAI_CHAT_MODEL and OPENAI_UTILITY_MODEL environment variables in your .env file.
+
+If problems persist, please open an issue on the GitHub repository with details about the error and your environment.
 
 ## Run the program
 
@@ -183,4 +201,34 @@ For any persistent issues, please open an issue on the GitHub repository or seek
 
 - Or run it in debug mode in VS Code using the "debug" button in the top right corner of the editor. Config files for VS Code are provided for this purpose.
 
-(... rest of the content unchanged ...)
+## Running Tests
+
+To run the test suite and verify the project's functionality:
+
+1. Make sure you're in the project root directory and your virtual environment is activated.
+
+2. Run the following command:
+
+   ```bash
+   python -m unittest discover app/tests
+   ```
+
+   This command will discover and run all tests in the `app/tests` directory.
+
+3. Review the test output to ensure all tests pass successfully.
+
+## Environment Variables Setup
+
+1. Copy the `.devcontainer/.env.example` file to `.devcontainer/.env`:
+
+   ```sh
+   cp .devcontainer/.env.example .devcontainer/.env
+   ```
+
+2. Open the `.devcontainer/.env` file in a text editor.
+
+3. Replace all placeholder values with your actual API keys and credentials. Do not share this file or commit it to version control.
+
+4. Save the file and close the editor.
+
+IMPORTANT: Never commit your `.env` file to version control. It contains sensitive information that should be kept private.
