@@ -1,5 +1,8 @@
 {
     "python.analysis.typeCheckingMode": "standard",
     "flake8.importStrategy": "fromEnvironment",
-    "python.analysis.autoImportCompletions": true
+    "python.analysis.autoImportCompletions": true,
+    "yaml.schemas": {
+        "https://json.schemastore.org/sourcery_yaml_schema.json": "file:///d%3A/HDev/burton/.sourcery.yaml"
+    }
 }
