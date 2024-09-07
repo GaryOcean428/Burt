@@ -238,6 +238,28 @@ def get_model(model_name: str) -> BaseChatModel | BaseLLM:
         raise ValueError(f"Unknown model: {model_name}")
 
 
+def get_chat_model(model_name: str, temperature=DEFAULT_TEMPERATURE):
+    if model_name.startswith("gpt-"):
+        return ChatOpenAI(model_name=model_name, temperature=temperature)
+    elif model_name.startswith("claude-"):
+        return ChatAnthropic(model=model_name, temperature=temperature)
+    elif model_name.startswith("llama-"):
+        return get_ollama_chat(model_name, temperature)
+    elif model_name.startswith("gemini-"):
+        return ChatGoogleGenerativeAI(model=model_name, temperature=temperature)
+    else:
+        raise ValueError(f"Unsupported chat model: {model_name}")
+
+
+def get_embedding_model(model_name: str):
+    if model_name == "text-embedding-ada-002":
+        return OpenAIEmbeddings()
+    elif model_name.startswith("llama-"):
+        return get_ollama_embedding(model_name)
+    else:
+        return HuggingFaceEmbeddings(model_name=model_name)
+
+
 # Example usage
 # model = get_model("gpt-4o", temperature=0.7)
 # response = model.invoke("Your prompt here")

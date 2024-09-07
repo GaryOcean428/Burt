@@ -1,6 +1,9 @@
 from abc import abstractmethod
-from typing import Callable
-from app.agent import Agent  # Updated import statement
+from typing import Callable, TYPE_CHECKING, Any, Dict
+
+if TYPE_CHECKING:
+    from app.agent import Agent
+
 from python.helpers.print_style import PrintStyle
 from python.helpers import files, messages
 from functools import wraps

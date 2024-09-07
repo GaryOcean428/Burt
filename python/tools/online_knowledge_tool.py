@@ -1,15 +1,16 @@
-from agent import Agent
 from python.helpers import perplexity_search
-from python.helpers.tool import Tool, Response
+from python.helpers import duckduckgo_search
+from typing import Dict, Any
 
 
-class OnlineKnowledge(Tool):
-    def execute(self, **kwargs):
-        return Response(
-            message=process_question(self.args["question"]),
-            break_loop=False,
-        )
+def process_question(question: str, config: Dict[str, Any]) -> str:
+    perplexity_api_key = config.get("PERPLEXITY_API_KEY")
 
+    if perplexity_api_key:
+        try:
+            return perplexity_search.search(question, perplexity_api_key)
+        except Exception as e:
+            print(f"Perplexity search failed: {e}")
 
-def process_question(question):
-    return str(perplexity_search.perplexity_search(question))
+    # Fallback to DuckDuckGo if Perplexity fails or API key is not available
+    return duckduckgo_search.search(question)

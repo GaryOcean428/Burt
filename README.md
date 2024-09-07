@@ -185,9 +185,9 @@ poetry run pytest
 
 If you encounter a "rate limit exceeded" error, the application will automatically retry the request up to 3 times. If the issue persists, please wait a few minutes before trying again or check your OpenAI API usage limits.
 
-### OpenAI Models
+### AI Models
 
-This project uses GPT-4o as the default chat model and GPT-4o-mini as the utility model. Make sure your OpenAI API key has access to these models. You can configure different models by setting the OPENAI_CHAT_MODEL and OPENAI_UTILITY_MODEL environment variables in your .env file.
+This project uses Claude 3.5 Sonnet as the default chat model, Groq's LLaMA 3.1 8B as the utility model, and GPT-4o-mini as the backup utility model. Make sure your API keys have access to these models. You can configure different models by setting the CHAT_MODEL, UTILITY_MODEL, and BACKUP_UTILITY_MODEL environment variables in your .env file.
 
 If problems persist, please open an issue on the GitHub repository with details about the error and your environment.
 

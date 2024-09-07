@@ -72,24 +72,24 @@ class CodeExecution(Tool):
         if not self.state:
 
             # initialize docker container if execution in docker is configured
-            if self.agent.config.code_exec_docker_enabled:
+            if self.agent.config["code_exec_docker_enabled"]:
                 docker = DockerContainerManager(
-                    name=self.agent.config.code_exec_docker_name,
-                    image=self.agent.config.code_exec_docker_image,
-                    ports=self.agent.config.code_exec_docker_ports,
-                    volumes=self.agent.config.code_exec_docker_volumes,
+                    name=self.agent.config["code_exec_docker_name"],
+                    image=self.agent.config["code_exec_docker_image"],
+                    ports=self.agent.config["code_exec_docker_ports"],
+                    volumes=self.agent.config["code_exec_docker_volumes"],
                 )
                 docker.start_container()
             else:
                 docker = None
 
-            # initialize local or remote interactive shell insterface
-            if self.agent.config.code_exec_ssh_enabled:
+            # initialize local or remote interactive shell interface
+            if self.agent.config["code_exec_ssh_enabled"]:
                 shell = SSHInteractiveSession(
-                    self.agent.config.code_exec_ssh_addr,
-                    self.agent.config.code_exec_ssh_port,
-                    self.agent.config.code_exec_ssh_user,
-                    self.agent.config.code_exec_ssh_pass,
+                    self.agent.config["code_exec_ssh_addr"],
+                    self.agent.config["code_exec_ssh_port"],
+                    self.agent.config["code_exec_ssh_user"],
+                    self.agent.config["code_exec_ssh_pass"],
                 )
             else:
                 shell = LocalInteractiveSession()

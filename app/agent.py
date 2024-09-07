@@ -1,13 +1,19 @@
 from dataclasses import dataclass, field
-import importlib, inspect, os, re
-from typing import Any, Dict, List
+import importlib
+import inspect
+import os
+import re
+from typing import Any
 from app.python.helpers import rate_limiter, files
-from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_core.language_models.llms import BaseLLM
-from langchain_core.embeddings import Embeddings
-from langchain_core.prompts import PromptTemplate  # Add this line here
+from langchain_community.chat_models import BaseChatModel
+from langchain_community.llms import BaseLLM
+from langchain.embeddings.base import Embeddings
+from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableSequence
-from python.helpers.tool import Tool
+from typing import List, Any
+
+# We'll define Tool as a type alias for now
+Tool = Any
 
 
 @dataclass
@@ -48,10 +54,6 @@ class AgentConfig:
 
 
 class Agent:
-
-    paused = False
-    streaming_agent = None
-
     def __init__(self, number: int, config: AgentConfig):
         # agent config
         self.config = config
