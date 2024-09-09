@@ -16,6 +16,7 @@ ignore:  # A list of paths or files which Sourcery will ignore.
   - ~/.cache
   - ~/.config
   - ~/.local
+  - work_dir/  # Added to ignore the work_dir directory
 
 rule_settings:
   enable:
@@ -36,7 +37,7 @@ rule_settings:
 rules:  # Custom rules for specific cases.
   - id: no-print-statements
     description: Avoid using print statements in test files, use logging instead.
-    pattern: '{print($VAR)}'
+    pattern: '{{print($VAR)}}'
     language: python
     replacement: |
       logging.info($VAR)
@@ -47,7 +48,7 @@ rules:  # Custom rules for specific cases.
 
   - id: no-explicit-exceptions
     description: Avoid catching base 'Exception', use more specific exceptions instead.
-    pattern: '{try: $BODY except Exception as $E: $HANDLER}'
+    pattern: '{{try: $BODY except Exception as $E: $HANDLER}}'
     language: python
     replacement: |
       try:
