@@ -37,7 +37,7 @@ rule_settings:
 rules:  # Custom rules for specific cases.
   - id: no-print-statements
     description: Avoid using print statements in test files, use logging instead.
-    pattern: '{print($VAR)}'
+    pattern: 'print($VAR)'
     language: python
     replacement: |
       logging.info($VAR)
