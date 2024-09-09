@@ -1,5 +1,5 @@
-from python.helpers.tool import Tool, Response
-from python.helpers import files
+from app.python.helpers.tool import Tool, Response
+from app.python.helpers import files
 
 
 class Unknown(Tool):

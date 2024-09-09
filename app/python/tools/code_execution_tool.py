@@ -3,14 +3,13 @@ import os, json, contextlib, subprocess, ast, shlex
 from io import StringIO
 import time
 from typing import Literal
-from python.helpers import files, messages
-from agent import Agent
-from python.helpers.tool import Tool, Response
-from python.helpers import files
-from python.helpers.print_style import PrintStyle
-from python.helpers.shell_local import LocalInteractiveSession
-from python.helpers.shell_ssh import SSHInteractiveSession
-from python.helpers.docker import DockerContainerManager
+from app.python.helpers.tool import Tool, Response
+from app.python.helpers import files, messages
+from app.agent import Agent
+from app.python.helpers.shell_local import LocalInteractiveSession
+from app.python.helpers.shell_ssh import SSHSession as SSHInteractiveSession
+from app.python.helpers.docker import DockerContainerManager
+from app.python.helpers.print_style import PrintStyle
 
 
 @dataclass
@@ -116,7 +115,7 @@ class CodeExecution(Tool):
         if self.agent.handle_intervention():
             return ""  # wait for intervention and handle it, if paused
 
-        self.state.shell.send_command(command)
+        self.state.shell.execute_command(command)
 
         PrintStyle(background_color="white", font_color="#1B4F72", bold=True).print(
             f"{self.agent.agent_name} code execution output:"
@@ -125,17 +124,22 @@ class CodeExecution(Tool):
 
     def get_terminal_output(self):
         idle = 0
+        full_output = ""
         while True:
             time.sleep(0.1)  # Wait for some output to be generated
-            full_output, partial_output = self.state.shell.read_output()
+            output = self.state.shell.execute_command("")
 
             if self.agent.handle_intervention():
                 return full_output  # wait for intervention and handle it, if paused
 
-            if partial_output:
-                PrintStyle(font_color="#85C1E9").stream(partial_output)
+            if output:
+                PrintStyle(font_color="#85C1E9").print(output)
+                full_output += output
                 idle = 0
             else:
                 idle += 1
                 if (full_output and idle > 30) or (not full_output and idle > 100):
                     return full_output
+
+# Ensure the Tool class is available for import
+Tool = CodeExecution

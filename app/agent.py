@@ -1,25 +1,34 @@
-from dataclasses import dataclass, field
-import importlib
-import inspect
 import os
+import sys
 import re
+import json
+import inspect
+import importlib.util
+from dataclasses import dataclass, field
 from app.python.helpers import rate_limiter, files
-from langchain_community.chat_models import BaseChatModel
-from langchain_community.llms import BaseLLM
-from langchain.embeddings.base import Embeddings
-from langchain_core.prompts import PromptTemplate
-from langchain_core.runnables import RunnableSequence
+from app.python.helpers.tool import Tool
+from typing import Any, Dict, List
+import logging
 
-# We'll define Tool as a type alias for now
-Tool = Any
+# Add the project root to sys.path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(project_root)
 
+try:
+    from langchain_core.language_models import BaseChatModel, BaseLLM
+    from langchain.embeddings.base import Embeddings
+    from langchain.schema.runnable import RunnableSequence
+    from langchain.prompts import PromptTemplate
+except ImportError:
+    logging.warning("Some langchain modules could not be imported. "
+                    "Make sure they are installed.")
 
 @dataclass
 class AgentConfig:
-    chat_model: BaseChatModel | BaseLLM
-    utility_model: BaseChatModel | BaseLLM
-    backup_utility_model: BaseChatModel | BaseLLM
-    embeddings_model: Embeddings
+    chat_model: Any  # Replace with specific type if available
+    utility_model: Any  # Replace with specific type if available
+    backup_utility_model: Any  # Replace with specific type if available
+    embeddings_model: Any  # Replace with specific type if available
     memory_subdir: str = ""
     auto_memory_count: int = 3
     auto_memory_skip: int = 2
@@ -35,10 +44,10 @@ class AgentConfig:
     code_exec_docker_enabled: bool = True
     code_exec_docker_name: str = "agent-zero-exe"
     code_exec_docker_image: str = "frdel/agent-zero-exe:latest"
-    code_exec_docker_ports: dict[str, int] = field(
+    code_exec_docker_ports: Dict[str, int] = field(
         default_factory=lambda: {"22/tcp": 50022}
     )
-    code_exec_docker_volumes: dict[str, dict[str, str]] = field(
+    code_exec_docker_volumes: Dict[str, Dict[str, str]] = field(
         default_factory=lambda: {
             files.get_abs_path("work_dir"): {"bind": "/root", "mode": "rw"}
         }
@@ -121,59 +130,67 @@ class Agent:
         )
         return RunnableSequence(executor_prompt | self.config.chat_model)
 
-    def process(
-        self, user_input: str, selected_model: str, params: Dict[str, Any]
-    ) -> str:
+    def process(self, user_input: str, selected_model: str, params: Dict[str, Any]) -> str:
+        logging.info(f"Processing user input: {user_input}")
+        logging.info(f"Selected model: {selected_model}")
+        logging.info(f"Parameters: {params}")
+
         try:
-            if not self.rate_limiter.check_and_update():
-                return (
-                    "I'm sorry, but I've reached my rate limit. Please try again later."
-                )
-
-            if self.intervention_status:
-                return self.handle_intervention(user_input)
-
-            # Generate a plan using the planner
-            knowledge = self.use_tool("knowledge_tool", {"question": user_input})
-            plan = self.planner.invoke(
-                {"objective": user_input, "knowledge": knowledge}
-            )
-
-            # Parse the plan into steps
-            steps = self.parse_plan(plan)
-
-            # Execute each step of the plan
-            results = []
-            for step in steps:
-                if "code_execution" in step.lower():
-                    result = self.use_tool(
-                        "code_execution_tool", {"runtime": "python", "code": step}
-                    )
-                elif "helper_agents" in step.lower():
-                    result = self.use_tool("call_helper_agents", {"task": step})
-                else:
-                    result = self.executor.invoke(
-                        {
-                            "plan": plan,
-                            "step": step,
-                            "model": selected_model,
-                            "params": params,
-                        }
-                    )
-                results.append(result)
-
-            # Combine the results into a final response
-            final_response = self.combine_results(results)
-
-            # Update conversation history and memory
-            self.update_history(user_input, final_response)
-            self.use_tool("memory_tool", {"action": "save", "text": final_response})
-
-            return final_response
+            return self._extracted_from_process_5(user_input, selected_model, params)
         except Exception as e:
             error_message = f"An error occurred while processing the input: {str(e)}"
             self.update_history(user_input, error_message)
+            logging.error(f"Error processing input: {str(e)}", exc_info=True)
             return error_message
+
+    # TODO Rename this here and in `process`
+    def _extracted_from_process_5(self, user_input, selected_model, params):
+        if not self.rate_limiter.check_and_update():
+            return (
+                "I'm sorry, but I've reached my rate limit. Please try again later."
+            )
+
+        if self.intervention_status:
+            return self.handle_intervention(user_input)
+
+        # Generate a plan using the planner
+        knowledge = self.use_tool("knowledge_tool", {"question": user_input})
+        plan = self.planner.invoke(
+            {"objective": user_input, "knowledge": knowledge}
+        )
+
+        # Parse the plan into steps
+        steps = self.parse_plan(plan)
+
+        # Execute each step of the plan
+        results = []
+        for step in steps:
+            if "code_execution" in step.lower():
+                result = self.use_tool(
+                    "code_execution_tool", {"runtime": "python", "code": step}
+                )
+            elif "helper_agents" in step.lower():
+                result = self.use_tool("call_helper_agents", {"task": step})
+            else:
+                result = self.executor.invoke(
+                    {
+                        "plan": plan,
+                        "step": step,
+                        "model": selected_model,
+                        "params": params,
+                    }
+                )
+            results.append(result)
+
+        # Combine the results into a final response
+        final_response = self.combine_results(results)
+
+        # Update conversation history and memory
+        self.update_history(user_input, final_response)
+        self.use_tool("memory_tool", {"action": "save", "text": final_response})
+
+        logging.info(f"Final response: {final_response}")
+        return final_response
 
     def use_tool(self, tool_name: str, args: dict) -> str:
         tool = self.tools.get(tool_name)
@@ -181,7 +198,7 @@ class Agent:
             raise ValueError(f"Tool '{tool_name}' not found")
 
         response = tool.execute(**args)
-        return response.message
+        return response.message if hasattr(response, 'message') else str(response)
 
     def parse_plan(self, plan: str) -> List[str]:
         return [step.strip() for step in plan.split("\n") if step.strip()]
@@ -203,12 +220,21 @@ class Agent:
         tools_dir = os.path.join(os.path.dirname(__file__), "python", "tools")
         for filename in os.listdir(tools_dir):
             if filename.endswith(".py") and not filename.startswith("__"):
-                module_name = filename[:-3]
-                module = importlib.import_module(f"app.python.tools.{module_name}")
-                for _, obj in inspect.getmembers(module):
-                    if inspect.isclass(obj) and issubclass(obj, Tool) and obj != Tool:
-                        tool_instance = obj(self)
-                        self.tools[tool_instance.name] = tool_instance
+                try:
+                    module_name = filename[:-3]
+                    module_path = os.path.join(tools_dir, filename)
+                    spec = importlib.util.spec_from_file_location(module_name, module_path)
+                    if spec is not None and spec.loader is not None:
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        for _, obj in inspect.getmembers(module):
+                            if (inspect.isclass(obj) and issubclass(obj, Tool) and
+                                    obj != Tool):
+                                tool_instance = obj(self)
+                                self.tools[tool_instance.name] = tool_instance
+                except Exception as e:
+                    logging.error(f"Error loading tool from {filename}: {str(e)}")
+        logging.info(f"Loaded tools: {list(self.tools.keys())}")
 
     def handle_intervention(self, user_input: str) -> str:
         response = f"Intervention received: {self.intervention_message}\n"

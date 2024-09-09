@@ -1,13 +1,14 @@
 from app.agent import Agent
-from . import online_knowledge_tool
-from python.helpers import perplexity_search
-from python.helpers import duckduckgo_search
-from . import memory_tool
+from app.python.tools import online_knowledge_tool
+from app.python.helpers import perplexity_search
+from app.python.helpers import duckduckgo_search
+from app.python.tools import memory_tool
 import concurrent.futures
-from python.helpers.tool import Tool, Response
-from python.helpers import files
-from python.helpers.print_style import PrintStyle
-from python.helpers import rate_limiter
+from app.python.helpers.tool import Tool, Response
+from app.python.helpers import files
+from app.python.helpers.vdb import VectorDB
+from app.python.helpers.print_style import PrintStyle
+from app.python.helpers import rate_limiter
 
 
 class KnowledgeTool(Tool):
@@ -36,5 +37,5 @@ class KnowledgeTool(Tool):
         combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"
         return Response(combined_result, break_loop=False)
 
-
-# Remove the duplicate Agent class definition
+# Ensure the Tool class is available for import
+Tool = KnowledgeTool

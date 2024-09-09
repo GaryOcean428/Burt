@@ -2,11 +2,9 @@
 AdvancedRouter: Dynamically selects the best model, parameters, and response strategy for a given query or task.
 """
 
-from typing import Dict, Any, List
-import re
+from typing import Dict, Any
 import logging
 from app.models import get_model_list
-from app.config import ROUTER_THRESHOLD
 import random
 from app.python.helpers.rate_limiter import RateLimiter
 
@@ -15,15 +13,15 @@ logger = logging.getLogger(__name__)
 
 
 class AdvancedRouter:
-    def __init__(self):
+    def __init__(self, config: Dict[str, Any]):
         self.models = get_model_list()
         self.base_model = "llama-3.1-8b"
-        self.threshold = ROUTER_THRESHOLD
+        self.threshold = config.get("ROUTER_THRESHOLD", 0.7)
         self.rate_limiter = RateLimiter(
-            max_calls=120,  # Increased from 60
-            max_input_tokens=200000,  # Increased from 100000
-            max_output_tokens=200000,  # Increased from 100000
-            window_seconds=60,
+            max_calls=config.get("rate_limit_requests", 120),
+            max_input_tokens=config.get("rate_limit_input_tokens", 200000),
+            max_output_tokens=config.get("rate_limit_output_tokens", 200000),
+            window_seconds=config.get("rate_limit_seconds", 60),
         )
 
     def select_model(self, user_input: str) -> str:
@@ -62,21 +60,12 @@ class AdvancedRouter:
 
     def is_complex_task(self, user_input: str) -> bool:
         complex_keywords = [
-            "analyze",
-            "explain",
-            "compare",
-            "synthesize",
-            "evaluate",
-            "design",
-            "optimize",
-            "predict",
-            "simulate",
+            "analyze", "explain", "compare", "synthesize", "evaluate",
+            "design", "optimize", "predict", "simulate",
         ]
         if any(keyword in user_input.lower() for keyword in complex_keywords):
             return True
-        if len(user_input.split()) > 50:  # Increased threshold for longer inputs
-            return True
-        return False
+        return len(user_input.split()) > 50
 
     def select_large_model(self, task_type: str) -> str:
         if task_type == "coding":
@@ -86,24 +75,20 @@ class AdvancedRouter:
         elif task_type == "analysis":
             return random.choice(["gpt-4o", "claude-3.5-sonnet", "llama-3.1-405b"])
         elif task_type == "long_context":
-            return random.choice(
-                [
-                    "llama-3.1-sonar-large-128k-online",
-                    "llama-3.1-sonar-huge-128k-online",
-                ]
-            )
+            return random.choice([
+                "llama-3.1-sonar-large-128k-online",
+                "llama-3.1-sonar-huge-128k-online",
+            ])
         else:
-            return random.choice(
-                ["gpt-4o", "claude-3.5-sonnet", "llama-3.1-405b", "gemini-1.5-pro"]
-            )
+            return random.choice([
+                "gpt-4o", "claude-3.5-sonnet", "llama-3.1-405b", "gemini-1.5-pro"
+            ])
 
     def select_small_model(self, task_type: str) -> str:
-        if task_type == "coding":
+        if task_type in {"coding", "analysis"}:
             return random.choice(["gpt-4o-mini", "mixtral-8x7b"])
         elif task_type == "creative":
             return random.choice(["llama-3.1-8b", "mistral-large-2"])
-        elif task_type == "analysis":
-            return random.choice(["gpt-4o-mini", "mixtral-8x7b"])
         else:
             return self.base_model
 
@@ -129,5 +114,5 @@ class AdvancedRouter:
 
         return params
 
-
-advanced_router = AdvancedRouter()
+# Remove the line below as it's not needed anymore
+# advanced_router = AdvancedRouter()

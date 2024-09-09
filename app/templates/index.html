@@ -104,11 +104,15 @@
                     })
                     .then(response => response.json())
                     .then(data => {
-                        appendMessage('ai', data.response);
+                        if (data.error) {
+                            appendMessage('ai', `Error: ${data.error}`);
+                        } else {
+                            appendMessage('ai', data.response);
+                        }
                     })
                     .catch(error => {
                         console.error('Error:', error);
-                        appendMessage('ai', 'An error occurred while processing your request.');
+                        appendMessage('ai', 'An error occurred while processing your request. Please try again.');
                     });
                 }
             }

@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from app.python.helpers.tool import Tool, Response
 
 
 def crawl_website(url: str) -> str:
@@ -12,9 +13,9 @@ def crawl_website(url: str) -> str:
         return f"Error crawling {url}: {str(e)}"
 
 
-class WebCrawlerTool:
+class WebCrawlerTool(Tool):
     def __init__(self, agent):
-        self.agent = agent
+        super().__init__(agent)
         self.name = "web_crawler_tool"
 
     def execute(self, url: str) -> str:

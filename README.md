@@ -19,8 +19,8 @@ Burton is a sophisticated AI agent framework designed to facilitate the creation
 The project is organized as follows:
 
 - `app/agent.py`: Contains the `Agent` class and its configuration.
-- `python/tools/call_subordinate.py`: Implements the `Delegation` tool for managing subordinate agents.
-- `python/helpers`: Contains various helper modules.
+- `app/python/tools/call_subordinate.py`: Implements the `Delegation` tool for managing subordinate agents.
+- `app/python/helpers`: Contains various helper modules.
 - `app/tests/test_agent.py`: Contains the test suite for the Agent class.
 
 ## Setup Instructions
@@ -70,14 +70,15 @@ burton/
 │   ├── config.py
 │   ├── models.py
 │   └── python/
-│       ├── helpers/
+│       ���── helpers/
 │       │   ├── __init__.py
 │       │   ├── extract_tools.py
 │       │   ├── errors.py
 │       │   └── ... (other helper modules)
 │       └── tools/
 │           ├── __init__.py
-│           └── ... (tool modules)
+│           ├── knowledge_tool.py
+│           └── ... (other tool modules)
 ├── docs/
 ├── prompts/
 ├── templates/

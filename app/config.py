@@ -12,6 +12,7 @@ ROUTER_THRESHOLD = 0.7
 def load_config() -> Dict[str, Any]:
     return {
         "ROUTER_THRESHOLD": ROUTER_THRESHOLD,
+        "LOG_LEVEL": os.getenv("LOG_LEVEL", "INFO"),
         "rate_limit_requests": int(os.getenv("RATE_LIMIT_REQUESTS", 120)),
         "rate_limit_seconds": int(os.getenv("RATE_LIMIT_SECONDS", 60)),
         "rate_limit_input_tokens": int(os.getenv("RATE_LIMIT_INPUT_TOKENS", 200000)),

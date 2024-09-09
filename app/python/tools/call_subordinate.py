@@ -1,7 +1,14 @@
+import sys
+import os
+
+# Add the project root to sys.path
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(project_root)
+
 from app.agent import Agent
-from python.helpers.tool import Tool, Response
-from python.helpers import files
-from python.helpers.print_style import PrintStyle
+from app.python.helpers.tool import Tool, Response
+from app.python.helpers import files
+from app.python.helpers.print_style import PrintStyle
 
 
 class Delegation(Tool):

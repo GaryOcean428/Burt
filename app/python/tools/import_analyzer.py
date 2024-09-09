@@ -1,5 +1,6 @@
 import os
 import ast
+import contextlib
 from typing import Dict, List, Tuple, Optional
 
 
@@ -20,8 +21,9 @@ def analyze_imports(project_path: str) -> Dict[str, List[Tuple[str, str]]]:
         for file in files:
             if file.endswith(".py"):
                 file_path = os.path.join(root, file)
-                file_violations = analyze_file_imports(file_path, project_path)
-                if file_violations:
+                if file_violations := analyze_file_imports(
+                    file_path, project_path
+                ):
                     violations[file_path] = file_violations
 
     return violations
@@ -48,13 +50,15 @@ def analyze_file_imports(file_path: str, project_path: str) -> List[Tuple[str, s
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                violation = check_import_violation(alias.name, file_path, project_path)
-                if violation:
+                if violation := check_import_violation(
+                    alias.name, file_path, project_path
+                ):
                     violations.append((f"import {alias.name}", violation))
         elif isinstance(node, ast.ImportFrom):
-            if node.level == 0:  # absolute import
-                violation = check_import_violation(node.module, file_path, project_path)
-                if violation:
+            if node.level == 0 and node.module is not None:
+                if violation := check_import_violation(
+                    node.module, file_path, project_path
+                ):
                     imports = ", ".join(alias.name for alias in node.names)
                     violations.append(
                         (f"from {node.module} import {imports}", violation)
@@ -83,18 +87,12 @@ def check_import_violation(
     module_parts = module.split(".")
     if module_parts[0] in ["app", "python"]:
         # Check if the module exists in the project structure
-        module_path = os.path.join(project_path, *module_parts) + ".py"
-        if os.path.exists(module_path):
-            return None
-        return "internal_absolute_import"
-
+        module_path = f"{os.path.join(project_path, *module_parts)}.py"
+        return None if os.path.exists(module_path) else "internal_absolute_import"
     # Check if it's a standard library or installed package
-    try:
+    with contextlib.suppress(ImportError):
         __import__(module_parts[0])
         return None
-    except ImportError:
-        pass
-
     return "external_import"
 
 
