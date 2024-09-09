@@ -1,35 +1,30 @@
-from openai import OpenAI
-import models
+import os
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+PERPLEXITY_API_KEY = os.getenv("API_KEY_PERPLEXITY")
 
 
-def perplexity_search(
-    query: str,
-    model_name="llama-3.1-sonar-large-128k-online",
-    api_key=None,
-    base_url="https://api.perplexity.ai",
-):
-    api_key = api_key or models.get_api_key("perplexity")
+def perplexity_search(query, max_results=5):
+    if not PERPLEXITY_API_KEY:
+        raise ValueError("Perplexity API key is not set in the environment variables.")
 
-    client = OpenAI(api_key=api_key, base_url=base_url)
+    url = "https://api.perplexity.ai/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    data = {
+        "model": "pplx-7b-online",
+        "messages": [{"role": "user", "content": query}],
+        "max_tokens": 1024,
+    }
 
-    messages = [
-        # It is recommended to use only single-turn conversations and avoid system prompts for the online LLMs (sonar-small-online and sonar-medium-online).
-        # {
-        #     "role": "system",
-        #     "content": (
-        #         "You are an artificial intelligence assistant and you need to "
-        #         "engage in a helpful, detailed, polite conversation with a user."
-        #     ),
-        # },
-        {
-            "role": "user",
-            "content": (query),
-        },
-    ]
-
-    response = client.chat.completions.create(
-        model=model_name,
-        messages=messages,  # type: ignore
-    )
-    result = response.choices[0].message.content  # only the text is returned
-    return result
+    try:
+        response = requests.post(url, json=data, headers=headers)
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"]
+    except requests.RequestException as e:
+        raise Exception(f"Error in Perplexity search: {str(e)}")

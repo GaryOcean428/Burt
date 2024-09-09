@@ -48,7 +48,7 @@ def load_config() -> Dict[str, Any]:
         "code_exec_ssh_port": int(os.getenv("CODE_EXEC_SSH_PORT", 50022)),
         "code_exec_ssh_user": os.getenv("CODE_EXEC_SSH_USER", "root"),
         "code_exec_ssh_pass": os.getenv("CODE_EXEC_SSH_PASS", ""),
-        "chat_model": os.getenv("CHAT_MODEL", "claude-3.5-sonnet"),
+        "chat_model": os.getenv("CHAT_MODEL", "claude-3-5-sonnet-20240620"),
         "utility_model": os.getenv("UTILITY_MODEL", "llama-3.1-8b"),
         "backup_utility_model": os.getenv("BACKUP_UTILITY_MODEL", "gpt-4o-mini"),
         "embeddings_model": os.getenv("EMBEDDINGS_MODEL", "text-embedding-ada-002"),

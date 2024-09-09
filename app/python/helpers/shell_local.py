@@ -1,6 +1,7 @@
 import subprocess
 import shlex
 
+
 def execute_command(command):
     try:
         args = shlex.split(command)
@@ -10,6 +11,7 @@ def execute_command(command):
         return f"Error: {e.stderr}"
     except Exception as e:
         return f"Error: {str(e)}"
+
 
 class LocalInteractiveSession:
     def __init__(self):
@@ -23,7 +25,7 @@ class LocalInteractiveSession:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 text=True,
-                shell=True
+                shell=True,
             )
         except Exception as e:
             return f"Error starting session: {str(e)}"

@@ -1,5 +1,10 @@
 from dataclasses import dataclass
-import os, json, contextlib, subprocess, ast, shlex
+import os
+import json
+import contextlib
+import subprocess
+import ast
+import shlex
 from io import StringIO
 import time
 from typing import Literal
@@ -140,6 +145,7 @@ class CodeExecution(Tool):
                 idle += 1
                 if (full_output and idle > 30) or (not full_output and idle > 100):
                     return full_output
+
 
 # Ensure the Tool class is available for import
 Tool = CodeExecution

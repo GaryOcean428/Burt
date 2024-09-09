@@ -21,9 +21,7 @@ def analyze_imports(project_path: str) -> Dict[str, List[Tuple[str, str]]]:
         for file in files:
             if file.endswith(".py"):
                 file_path = os.path.join(root, file)
-                if file_violations := analyze_file_imports(
-                    file_path, project_path
-                ):
+                if file_violations := analyze_file_imports(file_path, project_path):
                     violations[file_path] = file_violations
 
     return violations

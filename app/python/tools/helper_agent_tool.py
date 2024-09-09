@@ -6,10 +6,17 @@ from app.python.helpers.rate_limiter import RateLimiter
 
 class HelperAgent:
     def __init__(
-        self, model: str, rate_limit: int, max_input_tokens: int, max_output_tokens: int, window_seconds: int
+        self,
+        model: str,
+        rate_limit: int,
+        max_input_tokens: int,
+        max_output_tokens: int,
+        window_seconds: int,
     ):
         self.model = model
-        self.rate_limiter = RateLimiter(rate_limit, max_input_tokens, max_output_tokens, window_seconds)
+        self.rate_limiter = RateLimiter(
+            rate_limit, max_input_tokens, max_output_tokens, window_seconds
+        )
 
     def process(self, task: str) -> str:
         with self.rate_limiter:

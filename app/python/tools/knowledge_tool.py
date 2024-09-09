@@ -37,5 +37,6 @@ class KnowledgeTool(Tool):
         combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"
         return Response(combined_result, break_loop=False)
 
+
 # Ensure the Tool class is available for import
 Tool = KnowledgeTool

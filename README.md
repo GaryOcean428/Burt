@@ -70,7 +70,7 @@ burton/
 │   ├── config.py
 │   ├── models.py
 │   └── python/
-│       ���── helpers/
+│       ── helpers/
 │       │   ├── __init__.py
 │       │   ├── extract_tools.py
 │       │   ├── errors.py
@@ -188,7 +188,15 @@ If you encounter a "rate limit exceeded" error, the application will automatical
 
 ### AI Models
 
-This project uses Claude 3.5 Sonnet as the default chat model, Groq's LLaMA 3.1 8B as the utility model, and GPT-4o-mini as the backup utility model. Make sure your API keys have access to these models. You can configure different models by setting the CHAT_MODEL, UTILITY_MODEL, and BACKUP_UTILITY_MODEL environment variables in your .env file.
+This project uses Claude 3.5 Sonnet (claude-3-5-sonnet-20240620) as the default chat model, Groq's LLaMA 3.1 8B as the utility model, and GPT-4o-mini (gpt-4o-mini-2024-07-18) as the backup utility model. Make sure your API keys have access to these models. You can configure different models by setting the CHAT_MODEL, UTILITY_MODEL, and BACKUP_UTILITY_MODEL environment variables in your .env file.
+
+To use Groq models, ensure you have added your Groq API key to the .env file:
+
+```
+API_KEY_GROQ=your_groq_api_key_here
+```
+
+The project is configured to use Groq's LLaMA 3.1 models by default for certain tasks. You can adjust this in the `app/models.py` file if needed.
 
 If problems persist, please open an issue on the GitHub repository with details about the error and your environment.
 

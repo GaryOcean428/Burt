@@ -11,14 +11,12 @@ const RETRY_DELAY = 1000; // 1 second
 export async function handleOpenAIRequest(messages: any[]) {
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     try {
-      const response = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
-        messages,
-        temperature: 0.7,
-        stream: true,
-      });
-
-      return response;
+      return await openai.chat.completions.create({
+              model: "gpt-4o-mini-2024-07-18",
+              messages,
+              temperature: 0.7,
+              stream: true,
+            });
 
     } catch (error: any) {
       console.error(`Attempt ${attempt + 1} failed:`, error);

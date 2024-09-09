@@ -1,5 +1,6 @@
 import paramiko
 
+
 class SSHSession:
     def __init__(self, hostname, port, username, password):
         self.hostname = hostname
@@ -16,7 +17,7 @@ class SSHSession:
                 hostname=self.hostname,
                 port=self.port,
                 username=self.username,
-                password=self.password
+                password=self.password,
             )
             return True
         except Exception as e:
@@ -29,7 +30,7 @@ class SSHSession:
 
         try:
             stdin, stdout, stderr = self.client.exec_command(command)
-            return stdout.read().decode('utf-8')
+            return stdout.read().decode("utf-8")
         except Exception as e:
             return f"Error executing command: {str(e)}"
 
