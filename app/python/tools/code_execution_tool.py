@@ -103,13 +103,15 @@ class CodeExecution(Tool):
         self.agent.set_data("cot_state", self.state)
 
     def execute_python_code(self, code):
-        escaped_code = shlex.quote(code)
-        command = f"python3 -c {escaped_code}"
-        return self.terminal_session(command)
+        return self._extracted_from_execute_nodejs_code_2(code, 'python3 -c ')
 
     def execute_nodejs_code(self, code):
+        return self._extracted_from_execute_nodejs_code_2(code, 'node -e ')
+
+    # TODO Rename this here and in `execute_python_code` and `execute_nodejs_code`
+    def _extracted_from_execute_nodejs_code_2(self, code, arg1):
         escaped_code = shlex.quote(code)
-        command = f"node -e {escaped_code}"
+        command = f"{arg1}{escaped_code}"
         return self.terminal_session(command)
 
     def execute_terminal_command(self, command):
@@ -143,7 +145,8 @@ class CodeExecution(Tool):
                 idle = 0
             else:
                 idle += 1
-                if (full_output and idle > 30) or (not full_output and idle > 100):
+                if (full_output and idle > 30) or \
+                   (not full_output and idle > 100):
                     return full_output
 
 

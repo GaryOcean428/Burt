@@ -29,7 +29,9 @@ class Memory(Tool):
                 result = upload_file(self.agent, kwargs["upload"])
         except InvalidDimensionException as e:
             PrintStyle.hint(
-                "If you changed your embedding model, you will need to remove contents of /memory directory."
+                "If you changed your embedding model, you will need to remove contents "
+                "of /memory "
+                "directory."
             )
             raise
 
@@ -41,13 +43,13 @@ def search(agent: Agent, query: str, count: int = 5, threshold: float = 0.1):
     docs = db.search_similarity_threshold(query, count, threshold)
     if len(docs) == 0:
         return files.read_file("./prompts/fw.memories_not_found.md", query=query)
-    return str(docs)
+    return "\n".join([f"ID: {doc.id}, Content: {doc.content}" for doc in docs])
 
 
 def save(agent: Agent, text: str):
     initialize(agent)
-    id = db.insert_document(text)
-    return files.read_file("./prompts/fw.memory_saved.md", memory_id=id)
+    document_id = db.insert_document(text)
+    return files.read_file("./prompts/fw.memory_saved.md", memory_id=document_id)
 
 
 def delete(agent: Agent, ids_str: str):
@@ -66,23 +68,20 @@ def forget(agent: Agent, query: str):
 def upload_file(agent: Agent, file_path: str):
     initialize(agent)
     content = files.read_file(file_path)
-    id = db.insert_document(content, metadata={"source": file_path})
+    document_id = db.insert_document(content, metadata={"source": file_path})
     return files.read_file(
-        "./prompts/fw.file_uploaded.md", file_path=file_path, memory_id=id
+        "./prompts/fw.file_uploaded.md", file_path=file_path, memory_id=document_id
     )
 
 
 def initialize(agent: Agent):
     global db
     if not db:
-        dir = os.path.join("memory", agent.config["MEMORY_SUBDIR"])
-        db = VectorDB(
-            embeddings_model=agent.config["embeddings_model"],
-            in_memory=False,
-            cache_dir=dir,
-        )
+        memory_dir = os.path.join("memory", agent.config["MEMORY_SUBDIR"])
+        db = VectorDB(agent.config)
 
 
 def extract_guids(text):
-    pattern = r"\b[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}\b"
-    return re.findall(pattern, text)
+    return re.findall(
+        r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", text
+    )

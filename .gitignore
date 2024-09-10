@@ -184,3 +184,5 @@ memory/database/*
 # Archive folder and its subfolders
 archive/
 archive/**
+
+megalinter-reports/

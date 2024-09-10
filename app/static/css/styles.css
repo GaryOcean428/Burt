@@ -1,0 +1,28 @@
+body {
+    font-family: 'Inter', sans-serif;
+}
+.scrollbar-hide::-webkit-scrollbar {
+    display: none;
+}
+.scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}
+.chat-gradient {
+    background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%);
+}
+
+#uploadButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    aspect-ratio: 1 / 1;
+}
+
+#uploadButton svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+

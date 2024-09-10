@@ -29,6 +29,9 @@ pre-commit = "^3.8.0"
 duckduckgo-search = "^6.2.11"
 chromadb = "^0.5.5"
 paramiko = "^3.4.1"
+flake8 = "^7.1.1"
+asyncio = "^3.4.3"
+faiss-cpu = "^1.8.0.post1"
 
 [build-system]
 requires = ["poetry-core"]

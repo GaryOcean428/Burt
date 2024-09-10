@@ -1,9 +1,10 @@
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from app.agent import Agent, AgentConfig
 from app.config import load_config
-import json
 import os
+from app.python.helpers.vdb import Document
+from app.vector_db import VectorDB
 
 
 class TestAgent(unittest.TestCase):
@@ -64,9 +65,9 @@ class TestAgent(unittest.TestCase):
 
     def test_memory_management(self):
         initial_history_length = len(self.agent.get_history())
-        for i in range(self.agent.config.msgs_keep_max + 5):
-            self.agent.process(f"Test input {i}")
-
+        messages = [f"Test input {i}" for i in range(self.agent.config.rate_limit_msgs + 5)]
+        for message in messages:
+            self.agent.process(message)
         final_history_length = len(self.agent.get_history())
         self.assertLessEqual(final_history_length, self.agent.config.msgs_keep_max)
 
@@ -82,6 +83,28 @@ class TestAgent(unittest.TestCase):
         with patch("app.agent.Agent.use_tool", side_effect=Exception("Test error")):
             result = self.agent.process("Trigger an error")
             self.assertIn("An error occurred", result)
+
+    def test_vector_operations(self):
+        config = AgentConfig(
+            chat_model="test_model", embeddings_model="text-embedding-ada-002"
+        )
+        agent = Agent(1, config)
+        agent.initialize_models()
+
+        # Test adding a document
+        doc = Document("1", "This is a test document")
+        agent.vector_db.add_documents([doc])
+
+        # Test searching
+        agent.vector_db = VectorDB()  # Replace VectorDB with the actual class name of the vector database
+        results = agent.vector_db.search("test document")
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].content, "This is a test document")
+
+        # Test deleting a document
+        agent.vector_db.delete_document("1")
+        results = agent.vector_db.search("test document")
+        self.assertEqual(len(results), 0)
 
 
 if __name__ == "__main__":
