@@ -1,4 +1,4 @@
-from app.agent import Agent
+from ...agent import Agent
 from app.python.tools import online_knowledge_tool
 from app.python.helpers import duckduckgo_search
 from app.python.tools import memory_tool
@@ -10,6 +10,14 @@ from app.python.helpers import rate_limiter
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+class RateLimiter:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        pass  # Add any cleanup code if necessary
 
 
 class KnowledgeTool(Tool):
@@ -33,14 +41,13 @@ class KnowledgeTool(Tool):
             memory_result = memory_tool.search(
                 self.agent, question, count=3, threshold=0.5
             )
-            if hasattr(online_knowledge_tool, 'process_question'):
+            if hasattr(online_knowledge_tool, "process_question"):
                 online_result = online_knowledge_tool.process_question(
                     question, self.agent.config
                 )
             else:
                 online_result = (
-                    "process_question is not available "
-                    "in online_knowledge_tool"
+                    "process_question is not available " "in online_knowledge_tool"
                 )
 
         combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"

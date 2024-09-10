@@ -103,10 +103,10 @@ class CodeExecution(Tool):
         self.agent.set_data("cot_state", self.state)
 
     def execute_python_code(self, code):
-        return self._extracted_from_execute_nodejs_code_2(code, 'python3 -c ')
+        return self._extracted_from_execute_nodejs_code_2(code, "python3 -c ")
 
     def execute_nodejs_code(self, code):
-        return self._extracted_from_execute_nodejs_code_2(code, 'node -e ')
+        return self._extracted_from_execute_nodejs_code_2(code, "node -e ")
 
     # TODO Rename this here and in `execute_python_code` and `execute_nodejs_code`
     def _extracted_from_execute_nodejs_code_2(self, code, arg1):
@@ -145,8 +145,7 @@ class CodeExecution(Tool):
                 idle = 0
             else:
                 idle += 1
-                if (full_output and idle > 30) or \
-                   (not full_output and idle > 100):
+                if (full_output and idle > 30) or (not full_output and idle > 100):
                     return full_output
 
 
