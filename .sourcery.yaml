@@ -21,18 +21,18 @@ ignore:  # A list of paths or files which Sourcery will ignore.
 rule_settings:
   enable:
     - default
-    - inline-improvements  # Suggests inlining variable assignments for better readability and performance
-    - function-extraction  # Extracts duplicate functionality into reusable functions
-    - list-comprehension   # Converts loops into list comprehensions when appropriate
-    - use-with             # Recommends using 'with' statements for handling resources (like files)
-    - return-early         # Encourages returning early to avoid deep nesting
-    - merge-nested-ifs     # Merges nested if-statements where possible
-  disable: []  # A list of rule IDs Sourcery will never suggest.
+    - inline-improvements
+    - function-extraction
+    - list-comprehension
+    - use-with
+    - return-early
+    - merge-nested-ifs
+  disable: []
   rule_types:
     - refactoring
     - suggestion
     - comment
-  python_version: '3.9'  # Ensures compatibility with Python 3.9
+  python_version: '3.9'
 
 rules:  # Custom rules for specific cases.
   - id: no-print-statements
@@ -48,7 +48,7 @@ rules:  # Custom rules for specific cases.
 
   - id: no-explicit-exceptions
     description: Avoid catching base 'Exception', use more specific exceptions instead.
-    pattern: '{try: $BODY except Exception as $E: $HANDLER}'
+    pattern: 'try: $BODY except Exception as $E: $HANDLER'
     language: python
     replacement: |
       try:
@@ -57,6 +57,16 @@ rules:  # Custom rules for specific cases.
           $HANDLER
     explanation: Catch specific exceptions to avoid swallowing important errors.
 
+  - id: avoid-function-declarations-in-blocks
+    description: Avoid function declarations in blocks, use arrow functions instead.
+    pattern: 'function ${name}(${params}) ${body}'
+    replacement: 'const ${name} = (${params}) => ${body}'
+
+  - id: custom-raise-from-previous-error
+    description: Use 'raise ... from' syntax to preserve exception context.
+    pattern: 'except ${exception}:\n    ${body}\n    raise ${new_exception}'
+    replacement: 'except ${exception} as e:\n    raise ${new_exception} from e'
+
 rule_tags:
   performance:
     - inline-improvements
@@ -64,19 +74,19 @@ rule_tags:
     - list-comprehension
 
 metrics:
-  quality_threshold: 15.0  # Lowered the threshold for quality suggestions to ensure even minor improvements are caught
+  quality_threshold: 15.0
 
 github:
-  labels: [sourcery-auto]  # Labels added to pull requests created by Sourcery
+  labels: [sourcery-auto]
   ignore_labels:
     - sourcery-ignore
-  request_review: auto  # Automatically requests reviews for Sourcery PRs
+  request_review: auto
   sourcery_branch: sourcery/{base_branch}
 
 clone_detection:
-  min_lines: 2  # Reduced minimum lines to catch smaller duplicated code blocks
-  min_duplicates: 2  # Minimum number of occurrences before detecting duplicate code
-  identical_clones_only: false  # Detects both identical and similar clones
+  min_lines: 2
+  min_duplicates: 2
+  identical_clones_only: false
 
 proxy:
   url: "http://127.0.0.1:7890"

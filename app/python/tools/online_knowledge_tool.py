@@ -1,5 +1,5 @@
 from app.python.helpers.tool import Tool, Response
-from python.helpers import perplexity_search
+from app.python.helpers import perplexity_search
 from python.helpers import duckduckgo_search
 from typing import Dict, Any
 

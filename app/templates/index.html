@@ -10,44 +10,49 @@
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/core.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/lib/highlight.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.7.0/styles/github-dark.css">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .scrollbar-hide::-webkit-scrollbar { display: none; }
-        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
-        .chat-gradient { background: linear-gradient(180deg, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%); }
-    </style>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body class="bg-gray-50 h-screen flex overflow-hidden">
+<body class="bg-gray-50 dark:bg-gray-900 h-screen flex overflow-hidden">
     <!-- Sidebar -->
-    <div class="w-80 bg-white border-r border-gray-200 flex flex-col">
-        <div class="p-4 border-b border-gray-200">
-            <h1 class="text-2xl font-bold text-gray-800">Agent99</h1>
+    <div class="w-80 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800 dark:text-white">Agent99</h1>
+            <button id="themeToggle" class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700" aria-label="Toggle theme">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+            </button>
         </div>
         <div class="flex-1 overflow-y-auto scrollbar-hide p-4 space-y-2" id="chatHistory">
             <!-- Chat history will be populated here -->
         </div>
-        <div class="p-4 border-t border-gray-200">
+        <div class="p-4 border-t border-gray-200 dark:border-gray-700">
             <button id="newChatBtn" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-150 ease-in-out shadow-md">New Chat</button>
         </div>
     </div>
 
     <!-- Main chat area -->
-    <div class="flex-1 flex flex-col bg-white">
-        <div class="p-4 border-b border-gray-200 flex items-center bg-white">
+    <div class="flex-1 flex flex-col bg-white dark:bg-gray-800">
+        <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center bg-white dark:bg-gray-800">
             <img src="{{ url_for('static', filename='agent99-logo.webp') }}" alt="Agent99 avatar" class="w-10 h-10 rounded-full mr-3">
             <div>
-                <h2 class="font-semibold text-gray-800">Agent99</h2>
-                <p class="text-sm text-gray-500">AI Assistant</p>
+                <h2 class="font-semibold text-gray-800 dark:text-white">Agent99</h2>
+                <p class="text-sm text-gray-500 dark:text-gray-400">AI Assistant</p>
             </div>
         </div>
         <div id="chatContainer" class="flex-1 overflow-y-auto p-6 space-y-6">
             <!-- Chat messages will be appended here -->
         </div>
         <div class="chat-gradient h-24 w-full absolute bottom-16 pointer-events-none"></div>
-        <div class="bg-white border-t border-gray-200 p-4">
-            <div class="max-w-4xl mx-auto flex items-center bg-white rounded-lg shadow-md">
-                <input type="text" id="userInput" placeholder="Message Agent99..." class="flex-grow p-3 rounded-l-lg focus:outline-none">
-                <button id="sendButton" class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition duration-150 ease-in-out">
+        <div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 p-4">
+            <div class="max-w-4xl mx-auto flex items-center bg-white dark:bg-gray-700 rounded-lg shadow-md">
+                <button id="uploadButton" class="p-2 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200" aria-label="Upload file">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8 4a3 3 0 00-3 3v4a5 5 0 0010 0V7a1 1 0 112 0v4a7 7 0 11-14 0V7a5 5 0 0110 0v4a3 3 0 11-6 0V7a1 1 0 012 0v4a1 1 0 102 0V7a3 3 0 00-3-3z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+                <input type="text" id="userInput" placeholder="Message Agent99..." class="flex-grow p-3 rounded-lg focus:outline-none bg-white dark:bg-gray-700 text-gray-800 dark:text-white" aria-label="Enter your message">
+                <button id="sendButton" class="bg-blue-600 text-white px-6 py-3 rounded-r-lg hover:bg-blue-700 transition duration-150 ease-in-out" aria-label="Send message">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
                     </svg>
@@ -56,102 +61,29 @@
         </div>
     </div>
 
+    <!-- Loading spinner -->
+    <div id="loadingSpinner" class="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/chat.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatContainer = document.getElementById('chatContainer');
-            const chatHistory = document.getElementById('chatHistory');
-            const userInput = document.getElementById('userInput');
-            const sendButton = document.getElementById('sendButton');
-            const newChatBtn = document.getElementById('newChatBtn');
+        // Theme toggle functionality
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
 
-            function appendMessage(sender, message, modelInfo = null) {
-                const messageElement = document.createElement('div');
-                messageElement.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
-
-                const contentElement = document.createElement('div');
-                contentElement.className = `max-w-2xl ${sender === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-800'} rounded-lg p-4 shadow-md`;
-
-                contentElement.innerHTML = marked.parse(message);
-
-                if (modelInfo) {
-                    console.log("Model Info:", modelInfo); // Add this line for debugging
-                    const modelInfoElement = document.createElement('div');
-                    modelInfoElement.className = 'text-xs text-gray-500 mt-2';
-                    modelInfoElement.textContent = `Model: ${modelInfo.model_used} | Task: ${modelInfo.task_type} | Complexity: ${modelInfo.task_complexity.toFixed(2)}`;
-                    contentElement.appendChild(modelInfoElement);
-                }
-
-                messageElement.appendChild(contentElement);
-                chatContainer.appendChild(messageElement);
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-
-                // Highlight code blocks
-                messageElement.querySelectorAll('pre code').forEach((block) => {
-                    hljs.highlightElement(block);
-                });
-
-                // Add to chat history
-                const historyItem = document.createElement('div');
-                historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
-                historyItem.innerHTML = `<p class="font-medium text-gray-800">${sender === 'user' ? 'You' : 'Agent99'}</p><p class="text-sm text-gray-500 truncate">${message}</p>`;
-                chatHistory.insertBefore(historyItem, chatHistory.firstChild);
-            }
-
-            function sendQuery() {
-                const message = userInput.value.trim();
-                if (message) {
-                    appendMessage('user', message);
-                    userInput.value = '';
-
-                    fetch('/query', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ query: message }),
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Response data:", data); // Add this line for debugging
-                        if (data.error) {
-                            appendMessage('ai', `Error: ${data.error}`);
-                        } else {
-                            appendMessage('ai', data.response, {
-                                model_used: data.model_used,
-                                task_type: data.task_type,
-                                task_complexity: data.task_complexity
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        appendMessage('ai', 'An error occurred while processing your request. Please try again.');
-                    });
-                }
-            }
-
-            // Event listeners
-            userInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendQuery();
-                }
-            });
-
-            sendButton.addEventListener('click', sendQuery);
-
-            newChatBtn.addEventListener('click', function() {
-                chatContainer.innerHTML = '';
-                appendMessage('ai', 'Hello! How can I assist you today?');
-            });
-
-            // Add some initial chat history for demonstration
-            ['How do I set up the development environment?', 'Can you explain the key features of Agent99?', 'What\'s the best way to integrate external APIs?', 'How can I optimize my code for performance?'].forEach(msg => {
-                const historyItem = document.createElement('div');
-                historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
-                historyItem.innerHTML = `<p class="font-medium text-gray-800">You</p><p class="text-sm text-gray-500 truncate">${msg}</p>`;
-                chatHistory.appendChild(historyItem);
-            });
+        themeToggle.addEventListener('click', () => {
+            html.classList.toggle('dark');
+            localStorage.setItem('theme', html.classList.contains('dark') ? 'dark' : 'light');
         });
+
+        // Check for saved theme preference or prefer-color-scheme
+        const savedTheme = localStorage.getItem('theme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            html.classList.add('dark');
+        }
     </script>
 </body>
 </html>
