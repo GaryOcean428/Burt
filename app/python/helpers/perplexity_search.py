@@ -7,13 +7,16 @@ load_dotenv()
 PERPLEXITY_API_KEY = os.getenv("API_KEY_PERPLEXITY")
 
 
-def perplexity_search(query, max_results=5):
-    if not PERPLEXITY_API_KEY:
+def perplexity_search(query, max_results=5, api_key=None):
+    if not api_key:
+        api_key = PERPLEXITY_API_KEY
+
+    if not api_key:
         return "Perplexity search is not available (API key not set)."
 
     url = "https://api.perplexity.ai/chat/completions"
     headers = {
-        "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
+        "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     data = {

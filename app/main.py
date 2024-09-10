@@ -8,13 +8,20 @@ from app.advanced_router import AdvancedRouter
 from app.agent import Agent, AgentConfig
 from app.config import load_config
 from app.python.helpers.tool import Tool
-from app.python.helpers.message import HumanMessage, SystemMessage, AIMessage
 import logging
+from dotenv import load_dotenv
 
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(project_root)
 
+# Add these lines near the top of the file, after the imports
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+perplexity_api_key = os.getenv("API_KEY_PERPLEXITY")
+print(f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}")
 
 # Load tools
 def load_tools(agent):
@@ -81,6 +88,9 @@ agent_config_dict = {
     },
 }
 
+# Add this line after creating the AgentConfig
+agent_config_dict["PERPLEXITY_API_KEY"] = os.getenv("API_KEY_PERPLEXITY")
+
 # Initialize the Agent with a number (1) and the AgentConfig
 agent_config = AgentConfig(**agent_config_dict)
 agent = Agent(1, agent_config)
@@ -94,9 +104,6 @@ if hasattr(agent, "use_tools"):
     setattr(agent, "use_tools", True)
 if hasattr(agent, "use_memory"):
     setattr(agent, "use_memory", True)
-
-# Load the tools into the agent
-agent.set_tools({tool.name: tool for tool in tools})
 
 # Initialize AdvancedRouter with config and agent
 router = AdvancedRouter(config, agent)
@@ -117,15 +124,18 @@ async def query():
     logging.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        result = await router.process_query_advanced(user_input)
-        selected_model = result["model"]
-        task_type = result["task_type"]
-        task_complexity = result["task_complexity"]
-        response_content = result["response"]
+        result = await router.process(user_input, "chat", {})
+        logging.info(f"Router process result: {result}")
+
+        selected_model = result.get("model_used", "Unknown")
+        response_content = result.get("content", "No response")
+        task_type = result.get("task_type", "Unknown")
+        task_complexity = result.get("task_complexity", "Unknown")
 
         logging.info(f"Selected model: {selected_model}")
         logging.info(f"Task type: {task_type}")
         logging.info(f"Task complexity: {task_complexity}")
+        logging.info(f"Response content: {response_content[:100]}...")
 
         response_metadata = {
             "model_used": selected_model,
@@ -140,7 +150,7 @@ async def query():
             }
         )
     except Exception as e:
-        logging.error(f"Unexpected error: {str(e)}")
+        logging.error(f"Unexpected error in query processing: {str(e)}", exc_info=True)
         return (
             jsonify({"error": "An unexpected error occurred", "details": str(e)}),
             500,

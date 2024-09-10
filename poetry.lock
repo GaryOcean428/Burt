@@ -1850,20 +1850,20 @@ langchain-core = ">=0.2.26,<0.3.0"
 
 [[package]]
 name = "langchain-community"
-version = "0.2.9"
+version = "0.2.16"
 description = "Community contributed LangChain integrations."
 optional = false
 python-versions = "<4.0,>=3.8.1"
 files = [
-    {file = "langchain_community-0.2.9-py3-none-any.whl", hash = "sha256:b51d3adf9346a1161c1098917585b9e303cf24e2f5c71f5d232a0504edada5f2"},
-    {file = "langchain_community-0.2.9.tar.gz", hash = "sha256:1e7c180232916cbe35fe00509680dd1f805e32d7c87b5e80b3a9ec8754ecae37"},
+    {file = "langchain_community-0.2.16-py3-none-any.whl", hash = "sha256:115e1419c176091d4e00240cb5a38612a249e70f213516b6cacae61a8794a868"},
+    {file = "langchain_community-0.2.16.tar.gz", hash = "sha256:ab416b793a7aed1fa46ebaffd29993296b02286a99819eabc43be2ea8e41ae78"},
 ]
 
 [package.dependencies]
 aiohttp = ">=3.8.3,<4.0.0"
 dataclasses-json = ">=0.5.7,<0.7"
-langchain = ">=0.2.9,<0.3.0"
-langchain-core = ">=0.2.22,<0.3.0"
+langchain = ">=0.2.16,<0.3.0"
+langchain-core = ">=0.2.38,<0.3.0"
 langsmith = ">=0.1.0,<0.2.0"
 numpy = [
     {version = ">=1,<2", markers = "python_version < \"3.12\""},
@@ -3054,13 +3054,13 @@ type = ["mypy (>=1.11.2)"]
 
 [[package]]
 name = "posthog"
-version = "3.6.4"
+version = "3.6.5"
 description = "Integrate PostHog into any python application."
 optional = false
 python-versions = "*"
 files = [
-    {file = "posthog-3.6.4-py2.py3-none-any.whl", hash = "sha256:6e2d0521f8adcd3406914ee130df290fe39fbbe7874866ce6c80eab83013a8b0"},
-    {file = "posthog-3.6.4.tar.gz", hash = "sha256:e7ca52e4e4462ffefd73e4d5d859fc2e11f8f8846214cfecebbd9a0331ff54e8"},
+    {file = "posthog-3.6.5-py2.py3-none-any.whl", hash = "sha256:f8b7c573826b061a1d22c9495169c38ebe83a1df2729f49c7129a9c23a02acf6"},
+    {file = "posthog-3.6.5.tar.gz", hash = "sha256:7fd3ca809e15476c35f75d18cd6bba31395daf0a17b75242965c469fb6292510"},
 ]
 
 [package.dependencies]
@@ -5064,5 +5064,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "ebfbc521236ad7054391a7b33f3f8ebde27ad2d6bfbf9e3e2eb6369298e37e12"
-
+content-hash = "45f7c11aea8a16887a8bf58e56e65810c3cc01c342d784cf024eea52cea912e4"

@@ -34,6 +34,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const historyItem = document.createElement('div');
         historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
         historyItem.innerHTML = `<p class="font-medium text-gray-800">${sender === 'user' ? 'You' : 'Agent99'}</p><p class="text-sm text-gray-500 truncate">${message}</p>`;
+        historyItem.addEventListener('click', function() {
+            userInput.value = message;
+            userInput.focus();
+        });
         chatHistory.insertBefore(historyItem, chatHistory.firstChild);
     }
 
@@ -88,6 +92,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const historyItem = document.createElement('div');
         historyItem.className = 'p-3 hover:bg-gray-100 rounded-lg cursor-pointer transition duration-150 ease-in-out';
         historyItem.innerHTML = `<p class="font-medium text-gray-800">You</p><p class="text-sm text-gray-500 truncate">${msg}</p>`;
+        historyItem.addEventListener('click', function() {
+            userInput.value = msg;
+            userInput.focus();
+        });
         chatHistory.appendChild(historyItem);
     });
 
