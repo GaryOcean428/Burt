@@ -13,8 +13,7 @@ on:
   pull_request:
     branches:
       - main
-      - master
-
+      - testing
 # Comment env block if you do not want to apply fixes
 env:
   # Apply linter fixes configuration

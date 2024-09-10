@@ -8,6 +8,7 @@ from app.advanced_router import AdvancedRouter
 from app.agent import Agent, AgentConfig
 from app.config import load_config
 from app.python.helpers.tool import Tool
+from app.python.helpers.message import HumanMessage, SystemMessage, AIMessage
 import logging
 
 # Add the project root to the Python path
@@ -44,8 +45,6 @@ static_dir = os.path.join(project_root, "app", "static")
 
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 CORS(app)
-
-router = AdvancedRouter(config)
 
 # Prepare the configuration for AgentConfig
 agent_config_dict = {
@@ -99,6 +98,9 @@ if hasattr(agent, "use_memory"):
 # Load the tools into the agent
 agent.set_tools({tool.name: tool for tool in tools})
 
+# Initialize AdvancedRouter with config and agent
+router = AdvancedRouter(config, agent)
+
 
 @app.route("/")
 def index():
@@ -138,13 +140,11 @@ async def query():
             }
         )
     except Exception as e:
-        logging.error(f"Error processing query: {str(e)}", exc_info=True)
-        error_message = (
-            "An unexpected error occurred. Please try again or contact support."
+        logging.error(f"Unexpected error: {str(e)}")
+        return (
+            jsonify({"error": "An unexpected error occurred", "details": str(e)}),
+            500,
         )
-            "An unexpected error occurred. Please try again or contact support."
-        )
-        return jsonify({"error": error_message, "details": str(e)}), 500
 
 
 if __name__ == "__main__":

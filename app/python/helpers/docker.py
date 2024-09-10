@@ -50,9 +50,7 @@ class DockerContainerManager:
             try:
                 self.container.stop()
                 self.container.remove()
-                print(
-                    f"Stopped and removed the container: {self.container.id}"
-                )
+                print(f"Stopped and removed the container: {self.container.id}")
             except Exception as e:
                 print(f"Failed to stop and remove the container: {e}")
 

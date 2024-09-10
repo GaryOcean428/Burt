@@ -65,7 +65,9 @@ class TestAgent(unittest.TestCase):
 
     def test_memory_management(self):
         initial_history_length = len(self.agent.get_history())
-        messages = [f"Test input {i}" for i in range(self.agent.config.rate_limit_msgs + 5)]
+        messages = [
+            f"Test input {i}" for i in range(self.agent.config.rate_limit_msgs + 5)
+        ]
         for message in messages:
             self.agent.process(message)
         final_history_length = len(self.agent.get_history())
@@ -96,7 +98,9 @@ class TestAgent(unittest.TestCase):
         agent.vector_db.add_documents([doc])
 
         # Test searching
-        agent.vector_db = VectorDB()  # Replace VectorDB with the actual class name of the vector database
+        agent.vector_db = (
+            VectorDB()
+        )  # Replace VectorDB with the actual class name of the vector database
         results = agent.vector_db.search("test document")
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].content, "This is a test document")

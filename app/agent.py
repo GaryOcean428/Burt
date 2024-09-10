@@ -29,6 +29,7 @@ class Agent:
         self.tools: Dict[str, Tool] = {}
         self.conversation_history: List[MessageDict] = []
         self.vector_db: Optional[VectorDB] = None
+        self.history = []  # Add this line
 
     def set_tools(self, tools: Dict[str, Tool]) -> None:
         self.tools = tools
@@ -145,13 +146,15 @@ class Agent:
         return self.data.get(key)
 
     def save_state(self, filename: str):
-        # Implement state saving logic
+        with open(filename, "w") as file:
+            json.dump(self.data, file)
 
     def load_state(self, filename: str):
-        # Implement state loading logic
+        with open(filename, "r") as file:
+            self.data = json.load(file)
 
     def get_history(self):
-        return self.history
+        return self.conversation_history
 
 
 def create_agent(agent_id: int, config: Dict[str, Any]) -> Agent:

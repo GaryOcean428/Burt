@@ -10,7 +10,9 @@ class Document:
     content: str
     metadata: Dict[str, Any]
 
-    def __init__(self, document_id: str, content: str, metadata: Optional[Dict[str, Any]] = None):
+    def __init__(
+        self, document_id: str, content: str, metadata: Optional[Dict[str, Any]] = None
+    ):
         self.id: str = document_id
         self.content: str = content
         self.metadata: Dict[str, Any] = metadata or {}
