@@ -160,11 +160,18 @@ class AdvancedRouter:
             return await self.process_chat_model(query, model_name, params)
 
     async def process_chat_model(self, query: str, model_name: str, params: Dict[str, Any]) -> Dict[str, Any]:
-        async with self.rate_limiter:
-            return await self.agent.chat_model.invoke(query, model_name, params)
+        try:
+            await self.rate_limiter.acquire()
+            try:
+                return await self.agent.chat_model.invoke(query, model_name, params)
+            finally:
+                self.rate_limiter.release()
+        except AttributeError:
+            raise RuntimeError("Rate limiter is not properly initialized")
 
     async def process_knowledge_tool(self, query: str, params: Dict[str, Any]) -> Dict[str, Any]:
         # Implement knowledge tool processing logic here
+        raise NotImplementedError("Knowledge tool processing logic not implemented yet")
         pass
 
     async def process_memory_tool(self, query: str, params: Dict[str, Any]) -> Dict[str, Any]:
