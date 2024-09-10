@@ -1,13 +1,13 @@
 import os
 import requests
 from dotenv import load_dotenv
+from typing import Dict, Any
 
 load_dotenv()
 
 PERPLEXITY_API_KEY = os.getenv("API_KEY_PERPLEXITY")
 
-
-def perplexity_search(query, max_results=5, api_key=None):
+def perplexity_search(query: str, max_results: int = 5, api_key: str = None, complexity: float = 0.5) -> str:
     if not api_key:
         api_key = PERPLEXITY_API_KEY
 
@@ -19,8 +19,11 @@ def perplexity_search(query, max_results=5, api_key=None):
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
+
+    model = select_sonar_model(complexity)
+
     data = {
-        "model": "pplx-7b-online",
+        "model": model,
         "messages": [{"role": "user", "content": query}],
         "max_tokens": 1024,
     }
@@ -31,3 +34,11 @@ def perplexity_search(query, max_results=5, api_key=None):
         return response.json()["choices"][0]["message"]["content"]
     except requests.RequestException as e:
         raise Exception(f"Error in Perplexity search: {str(e)}")
+
+def select_sonar_model(complexity: float) -> str:
+    if complexity < 0.3:
+        return "sonar-small-online"
+    elif complexity < 0.7:
+        return "sonar-medium-online"
+    else:
+        return "sonar-large-online"
