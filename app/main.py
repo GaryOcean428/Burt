@@ -24,7 +24,7 @@ def load_tools(agent):
         if filename.endswith(".py") and filename != "__init__.py"
         for module_name in [f"app.python.tools.{filename[:-3]}"]
         for module in [importlib.import_module(module_name)]
-        for name, obj in inspect.getmembers(module)
+        for _, obj in inspect.getmembers(module)
         if inspect.isclass(obj) and issubclass(obj, Tool) and obj != Tool
     }
     return list(tools.values())
@@ -35,13 +35,14 @@ config = load_config()
 
 # Set up logging
 logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s"
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 
 # Set the template folder path
 template_dir = os.path.join(project_root, "app", "templates")
+static_dir = os.path.join(project_root, "app", "static")
 
-app = Flask(__name__, template_folder=template_dir)
+app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 CORS(app)
 
 router = AdvancedRouter(config)
@@ -85,57 +86,65 @@ agent_config_dict = {
 agent_config = AgentConfig(**agent_config_dict)
 agent = Agent(1, agent_config)
 
+# Load tools and set them for the agent
+tools = load_tools(agent)
+agent.set_tools({tool.name: tool for tool in tools})
 
-# Add an additional blank line
+# Set use_tools attribute if it exists in the Agent class
+if hasattr(agent, "use_tools"):
+    setattr(agent, "use_tools", True)
+if hasattr(agent, "use_memory"):
+    setattr(agent, "use_memory", True)
+
+# Load the tools into the agent
+agent.set_tools({tool.name: tool for tool in tools})
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
 
 
 @app.route("/query", methods=["POST"])
-def query():
+async def query():
     data = request.json
+    if data is None:
+        return jsonify({"error": "Invalid JSON data"}), 400
     user_input = data.get("query", "")
 
     logging.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        result = router.process_query_advanced(user_input)
+        result = await router.process_query_advanced(user_input)
         selected_model = result["model"]
         task_type = result["task_type"]
         task_complexity = result["task_complexity"]
+        response_content = result["response"]
 
         logging.info(f"Selected model: {selected_model}")
         logging.info(f"Task type: {task_type}")
         logging.info(f"Task complexity: {task_complexity}")
 
-        params = router.get_model_parameters(task_type, task_complexity)
-        logging.info(f"Model parameters: {params}")
-
-        agent = Agent(1, agent_config)
-        agent.set_tools({tool.name: tool for tool in load_tools(agent)})
-
-        response = agent.process(user_input, selected_model, params)
+        response_metadata = {
+            "model_used": selected_model,
+            "task_type": task_type,
+            "task_complexity": task_complexity,
+        }
 
         return jsonify(
             {
-                "response": response,
-                "model_used": selected_model,
-                "task_type": task_type,
-                "task_complexity": task_complexity,
+                "response": response_content,
+                "metadata": response_metadata,
             }
         )
     except Exception as e:
-        logging.error(f"Error processing query: {str(e)}")
-        return (
-            jsonify(
-                {
-                    "error": "An error occurred while processing your request. Please try again.",
-                    "details": str(e),
-                }
-            ),
-            500,
+        logging.error(f"Error processing query: {str(e)}", exc_info=True)
+        error_message = (
+            "An unexpected error occurred. Please try again or contact support."
         )
+            "An unexpected error occurred. Please try again or contact support."
+        )
+        return jsonify({"error": error_message, "details": str(e)}), 500
 
 
 if __name__ == "__main__":

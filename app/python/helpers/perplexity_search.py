@@ -9,7 +9,7 @@ PERPLEXITY_API_KEY = os.getenv("API_KEY_PERPLEXITY")
 
 def perplexity_search(query, max_results=5):
     if not PERPLEXITY_API_KEY:
-        raise ValueError("Perplexity API key is not set in the environment variables.")
+        return "Perplexity search is not available (API key not set)."
 
     url = "https://api.perplexity.ai/chat/completions"
     headers = {

@@ -21,3 +21,4 @@ dependencies:
     - python-dotenv==1.0.1
     - requests==2.31.0
     - langchain-groq==0.1.5
+    - langchain-gpt3==0.1.4
