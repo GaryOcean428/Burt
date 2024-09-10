@@ -10,6 +10,8 @@ from app.config import load_config
 from app.python.helpers.tool import Tool
 import logging
 from dotenv import load_dotenv
+import uuid
+from app.python.helpers.redis_cache import RedisCache
 
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -20,8 +22,16 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-perplexity_api_key = os.getenv("API_KEY_PERPLEXITY")
+perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
 print(f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}")
+
+# Add these lines after loading the other environment variables
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
+pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
+print(f"Pinecone API Key: {'Set' if pinecone_api_key else 'Not set'}")
+print(f"Pinecone Environment: {pinecone_environment}")
+print(f"Pinecone Index Name: {pinecone_index_name}")
 
 # Load tools
 def load_tools(agent):
@@ -89,7 +99,12 @@ agent_config_dict = {
 }
 
 # Add this line after creating the AgentConfig
-agent_config_dict["PERPLEXITY_API_KEY"] = os.getenv("API_KEY_PERPLEXITY")
+agent_config_dict["perplexity_api_key"] = os.getenv("PERPLEXITY_API_KEY")
+agent_config_dict["pinecone_api_key"] = os.getenv("PINECONE_API_KEY")
+agent_config_dict["pinecone_environment"] = os.getenv("PINECONE_ENVIRONMENT")
+agent_config_dict["pinecone_index_name"] = os.getenv("PINECONE_INDEX_NAME")
+agent_config_dict["pinecone_dimension"] = 3072  # Update this line
+agent_config_dict["pinecone_cloud"] = os.getenv("PINECONE_CLOUD", "aws")
 
 # Initialize the Agent with a number (1) and the AgentConfig
 agent_config = AgentConfig(**agent_config_dict)
@@ -120,11 +135,15 @@ async def query():
     if data is None:
         return jsonify({"error": "Invalid JSON data"}), 400
     user_input = data.get("query", "")
+    conversation_id = data.get("conversation_id", str(uuid.uuid4()))
 
     logging.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        result = await router.process(user_input, "chat", {})
+        conversation_history = RedisCache.get(f"conversation:{conversation_id}") or []
+        conversation_history.append({"role": "user", "content": user_input})
+
+        result = await router.process(user_input, "chat", {"conversation_history": conversation_history})
         logging.info(f"Router process result: {result}")
 
         selected_model = result.get("model_used", "Unknown")
@@ -137,10 +156,14 @@ async def query():
         logging.info(f"Task complexity: {task_complexity}")
         logging.info(f"Response content: {response_content[:100]}...")
 
+        conversation_history.append({"role": "assistant", "content": response_content})
+        RedisCache.set(f"conversation:{conversation_id}", conversation_history)
+
         response_metadata = {
             "model_used": selected_model,
             "task_type": task_type,
             "task_complexity": task_complexity,
+            "conversation_id": conversation_id,
         }
 
         return jsonify(

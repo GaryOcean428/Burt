@@ -54,6 +54,11 @@ def load_config() -> Dict[str, Any]:
         "utility_model": os.getenv("UTILITY_MODEL", "llama-3.1-8b"),
         "backup_utility_model": os.getenv("BACKUP_UTILITY_MODEL", "gpt-4o-mini"),
         "embeddings_model": os.getenv("EMBEDDINGS_MODEL", "text-embedding-3-small"),
+        "PINECONE_API_KEY": os.getenv("PINECONE_API_KEY"),
+        "PINECONE_ENVIRONMENT": os.getenv("PINECONE_ENVIRONMENT"),
+        "PINECONE_INDEX_NAME": os.getenv("PINECONE_INDEX_NAME"),
+        "PINECONE_DIMENSION": int(os.getenv("PINECONE_DIMENSION", 3072)),
+        "PINECONE_CLOUD": os.getenv("PINECONE_CLOUD", "aws"),
     }
 
 

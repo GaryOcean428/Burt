@@ -8,6 +8,8 @@ from typing import Dict, Any, List
 from app.models import get_model_list, get_chat_model
 from app.python.helpers.rate_limiter import RateLimiter
 import re
+from app.python.helpers.redis_cache import RedisCache
+import uuid
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -232,7 +234,7 @@ class AdvancedRouter:
         self, query: str, model_name: str, params: Dict[str, Any]
     ) -> Dict[str, Any]:
         try:
-            conversation_history = self.agent.get_history()
+            conversation_history = params.get("conversation_history", [])
             config = await self.route(query, conversation_history)
 
             if not self.agent.chat_model:

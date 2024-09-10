@@ -15,6 +15,12 @@ class MessageDict(TypedDict):
 class AgentConfig:
     chat_model: str
     embeddings_model: str
+    pinecone_api_key: str
+    pinecone_environment: str
+    pinecone_index_name: str
+    pinecone_dimension: int
+    pinecone_cloud: str
+    perplexity_api_key: str
 
     def __init__(self, **kwargs: Any):
         self.__dict__.update(kwargs)
