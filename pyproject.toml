@@ -32,6 +32,8 @@ paramiko = "^3.4.1"
 flake8 = "^7.1.1"
 asyncio = "^3.4.3"
 faiss-cpu = "^1.8.0.post1"
+pinecone = "^5.1.0"
+pinecone-client = "^5.0.1"
 
 [build-system]
 requires = ["poetry-core"]

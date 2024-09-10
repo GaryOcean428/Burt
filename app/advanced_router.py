@@ -45,7 +45,9 @@ class AdvancedRouter:
         logger.info(f"Task type: {task_type}")
         logger.info(f"Question type: {question_type}")
 
-        if task_type == "casual":
+        if task_type == "memory_retrieval":
+            config = self._get_memory_config()
+        elif task_type == "casual":
             config = self._get_casual_config()
         elif complexity < self.threshold / 2 and context_length < 1000:
             config = self._get_low_tier_config(task_type)
@@ -196,6 +198,16 @@ class AdvancedRouter:
         if task_type in ["coding", "analysis"]:
             config["temperature"] = 0.5
         return config
+
+    def _get_memory_config(self) -> Dict[str, Any]:
+        return {
+            "model": "memory_retrieval",
+            "max_tokens": 512,
+            "temperature": 0.3,
+            "response_strategy": "memory_focused",
+            "task_type": "memory_retrieval",
+            "task_complexity": 0.6
+        }
 
     def _adjust_params_based_on_history(
         self, config: Dict[str, Any], conversation_history: List[Dict[str, str]]

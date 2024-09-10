@@ -3,6 +3,7 @@ from app.python.helpers import perplexity_search
 from app.python.helpers import duckduckgo_search
 from typing import Dict, Any
 import logging
+from app.agent_config import AgentConfig
 
 logger = logging.getLogger(__name__)
 
@@ -17,9 +18,9 @@ class OnlineKnowledgeTool(Tool):
         result = self.process_question(query, config)
         return Response(message=result)
 
-    def process_question(self, question: str, config: Dict[str, Any]) -> str:
-        perplexity_api_key = config.get("PERPLEXITY_API_KEY")
-        complexity = config.get("task_complexity", 0.5)
+    def process_question(self, question: str, config: AgentConfig) -> str:
+        perplexity_api_key = getattr(config, "PERPLEXITY_API_KEY", None)
+        complexity = getattr(config, "task_complexity", 0.5)
 
         if perplexity_api_key:
             try:
