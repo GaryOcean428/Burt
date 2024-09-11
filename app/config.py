@@ -48,10 +48,17 @@ def load_config() -> Dict[str, Any]:
         "code_exec_ssh_port": int(os.getenv("CODE_EXEC_SSH_PORT", 50022)),
         "code_exec_ssh_user": os.getenv("CODE_EXEC_SSH_USER", "root"),
         "code_exec_ssh_pass": os.getenv("CODE_EXEC_SSH_PASS", ""),
-        "chat_model": os.getenv("CHAT_MODEL", "claude-3-5-sonnet-20240620"),
+        "chat_model": os.getenv(
+            "CHAT_MODEL", "llama-3.1-8b-instant"
+        ),  # Changed default to llama-3.1-8b-instant
         "utility_model": os.getenv("UTILITY_MODEL", "llama-3.1-8b"),
         "backup_utility_model": os.getenv("BACKUP_UTILITY_MODEL", "gpt-4o-mini"),
         "embeddings_model": os.getenv("EMBEDDINGS_MODEL", "text-embedding-3-small"),
+        "PINECONE_API_KEY": os.getenv("PINECONE_API_KEY"),
+        "PINECONE_ENVIRONMENT": os.getenv("PINECONE_ENVIRONMENT"),
+        "PINECONE_INDEX_NAME": os.getenv("PINECONE_INDEX_NAME"),
+        "PINECONE_DIMENSION": int(os.getenv("PINECONE_DIMENSION", 3072)),
+        "PINECONE_CLOUD": os.getenv("PINECONE_CLOUD", "aws"),
     }
 
 

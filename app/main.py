@@ -2,21 +2,55 @@ import os
 import importlib
 import sys
 import inspect
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_from_directory
 from flask_cors import CORS
+from werkzeug.utils import secure_filename
 from app.advanced_router import AdvancedRouter
 from app.agent import Agent, AgentConfig
 from app.config import load_config
 from app.python.helpers.tool import Tool
-from app.python.helpers.message import HumanMessage, SystemMessage, AIMessage
+from app.python.helpers.rag_system import RAGSystem
 import logging
+from dotenv import load_dotenv
+import uuid
+from app.python.helpers.redis_cache import RedisCache
+import PyPDF2
+import io
 
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.append(project_root)
 
+load_dotenv()
 
-# Load tools
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
+logger = logging.getLogger(__name__)
+
+# Load and check environment variables
+perplexity_api_key = os.getenv("PERPLEXITY_API_KEY")
+pinecone_api_key = os.getenv("PINECONE_API_KEY")
+pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
+pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
+
+logger.info(f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}")
+logger.info(f"Pinecone API Key: {'Set' if pinecone_api_key else 'Not set'}")
+logger.info(f"Pinecone Environment: {pinecone_environment}")
+logger.info(f"Pinecone Index Name: {pinecone_index_name}")
+
+if not perplexity_api_key:
+    logger.warning(
+        "Perplexity API key is not set. Some features may not work properly."
+    )
+
+if not pinecone_api_key or not pinecone_environment or not pinecone_index_name:
+    logger.warning(
+        "One or more Pinecone configuration variables are not set. RAG system may not work properly."
+    )
+
+
 def load_tools(agent):
     tools_dir = os.path.join(os.path.dirname(__file__), "python", "tools")
     tools = {
@@ -34,11 +68,6 @@ def load_tools(agent):
 # Load configuration
 config = load_config()
 
-# Set up logging
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
-)
-
 # Set the template folder path
 template_dir = os.path.join(project_root, "app", "templates")
 static_dir = os.path.join(project_root, "app", "static")
@@ -46,12 +75,23 @@ static_dir = os.path.join(project_root, "app", "static")
 app = Flask(__name__, template_folder=template_dir, static_folder=static_dir)
 CORS(app)
 
+# Set up file upload configuration
+UPLOAD_FOLDER = os.path.join(project_root, "uploads")
+ALLOWED_EXTENSIONS = {"pdf"}
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
+
 # Prepare the configuration for AgentConfig
 agent_config_dict = {
     "chat_model": config["chat_model"],
     "utility_model": config["utility_model"],
     "backup_utility_model": config["backup_utility_model"],
     "embeddings_model": config["embeddings_model"],
+    "perplexity_api_key": perplexity_api_key,
+    "pinecone_api_key": pinecone_api_key,
+    "pinecone_environment": pinecone_environment,
+    "pinecone_index_name": pinecone_index_name,
+    "pinecone_dimension": int(os.getenv("PINECONE_DIMENSION", 1536)),
+    "pinecone_cloud": os.getenv("PINECONE_CLOUD", "aws"),
     **{
         key: config.get(key, default)
         for key, default in [
@@ -95,16 +135,59 @@ if hasattr(agent, "use_tools"):
 if hasattr(agent, "use_memory"):
     setattr(agent, "use_memory", True)
 
-# Load the tools into the agent
-agent.set_tools({tool.name: tool for tool in tools})
+# Initialize RAGSystem
+rag_system = RAGSystem()
 
-# Initialize AdvancedRouter with config and agent
-router = AdvancedRouter(config, agent)
+# Initialize AdvancedRouter with config, agent, and RAGSystem
+router = AdvancedRouter(config, agent, rag_system)
+
+
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 @app.route("/")
 def index():
     return render_template("index.html")
+
+
+@app.route("/upload", methods=["POST"])
+def upload_file():
+    if "file" not in request.files:
+        return jsonify({"error": "No file part"}), 400
+    file = request.files["file"]
+    if file.filename == "":
+        return jsonify({"error": "No selected file"}), 400
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
+        file.save(filepath)
+
+        # Process the PDF file
+        try:
+            with open(filepath, "rb") as pdf_file:
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                text = ""
+                for page in pdf_reader.pages:
+                    text += page.extract_text()
+
+            # Add the extracted text to the RAG system
+            rag_system.add_document(text, metadata={"filename": filename})
+
+            return (
+                jsonify(
+                    {
+                        "message": "File uploaded and processed successfully",
+                        "filename": filename,
+                    }
+                ),
+                200,
+            )
+        except Exception as e:
+            logger.error(f"Error processing PDF: {str(e)}")
+            return jsonify({"error": "Error processing PDF"}), 500
+    else:
+        return jsonify({"error": "File type not allowed"}), 400
 
 
 @app.route("/query", methods=["POST"])
@@ -113,24 +196,46 @@ async def query():
     if data is None:
         return jsonify({"error": "Invalid JSON data"}), 400
     user_input = data.get("query", "")
+    conversation_id = data.get("conversation_id", str(uuid.uuid4()))
 
-    logging.info(f"Processing advanced query: {user_input[:20]}...")
+    logger.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        result = await router.process_query_advanced(user_input)
-        selected_model = result["model"]
-        task_type = result["task_type"]
-        task_complexity = result["task_complexity"]
-        response_content = result["response"]
+        conversation_history = RedisCache.get(f"conversation:{conversation_id}") or []
+    except Exception as e:
+        logger.error(f"Error retrieving conversation history from Redis: {str(e)}")
+        conversation_history = []
 
-        logging.info(f"Selected model: {selected_model}")
-        logging.info(f"Task type: {task_type}")
-        logging.info(f"Task complexity: {task_complexity}")
+    conversation_history.append({"role": "user", "content": user_input})
+
+    try:
+        result = await router.process(
+            user_input, "chat", {"conversation_history": conversation_history}
+        )
+        logger.info(f"Router process result: {result}")
+
+        selected_model = result.get("model_used", "Unknown")
+        response_content = result.get("content", "No response")
+        task_type = result.get("task_type", "Unknown")
+        task_complexity = result.get("task_complexity", "Unknown")
+
+        logger.info(f"Selected model: {selected_model}")
+        logger.info(f"Task type: {task_type}")
+        logger.info(f"Task complexity: {task_complexity}")
+        logger.info(f"Response content: {response_content[:100]}...")
+
+        conversation_history.append({"role": "assistant", "content": response_content})
+
+        try:
+            RedisCache.set(f"conversation:{conversation_id}", conversation_history)
+        except Exception as e:
+            logger.error(f"Error saving conversation history to Redis: {str(e)}")
 
         response_metadata = {
             "model_used": selected_model,
             "task_type": task_type,
             "task_complexity": task_complexity,
+            "conversation_id": conversation_id,
         }
 
         return jsonify(
@@ -140,7 +245,7 @@ async def query():
             }
         )
     except Exception as e:
-        logging.error(f"Unexpected error: {str(e)}")
+        logger.error(f"Unexpected error in query processing: {str(e)}", exc_info=True)
         return (
             jsonify({"error": "An unexpected error occurred", "details": str(e)}),
             500,
@@ -148,9 +253,10 @@ async def query():
 
 
 if __name__ == "__main__":
-    print("Loading tools...")
+    logger.info("Loading tools...")
     loaded_tools = load_tools(agent)
-    print(f"Loaded tools: {[tool.name for tool in loaded_tools]}")
+    logger.info(f"Loaded tools: {[tool.name for tool in loaded_tools]}")
     agent.set_tools({tool.name: tool for tool in loaded_tools})
-    print(f"Agent tools: {list(agent.get_tools().keys())}")
+    logger.info(f"Agent tools: {list(agent.get_tools().keys())}")
+    logger.info(f"RAG system initialized: {rag_system is not None}")
     app.run(debug=config.get("DEBUG", False))

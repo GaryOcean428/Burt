@@ -1,6 +1,6 @@
-version: '1'  # The schema version of this config file
+version: "1" # The schema version of this config file
 
-ignore:  # A list of paths or files which Sourcery will ignore.
+ignore: # A list of paths or files which Sourcery will ignore.
   - .git
   - env
   - .env
@@ -16,7 +16,7 @@ ignore:  # A list of paths or files which Sourcery will ignore.
   - ~/.cache
   - ~/.config
   - ~/.local
-  - work_dir/  # Added to ignore the work_dir directory
+  - work_dir/ # Added to ignore the work_dir directory
 
 rule_settings:
   enable:
@@ -27,51 +27,68 @@ rule_settings:
     - use-with
     - return-early
     - merge-nested-ifs
-  disable: []
   rule_types:
     - refactoring
     - suggestion
     - comment
-  python_version: '3.9'
+  python_version: "3.9"
 
-rules:  # Custom rules for specific cases.
+rules: # Custom rules for specific cases.
   - id: no-print-statements
-    description: Avoid using print statements in test files, use logging instead.
-    pattern: 'print($VAR)'
+    description: Avoid using print statements in test files; use logging instead.
+    pattern: "print(${VAR})"
     language: python
     replacement: |
-      logging.info($VAR)
+      logging.info(${VAR})
     explanation: Use logging instead of print statements for better control and verbosity in test files.
     paths:
       include:
         - test
 
   - id: no-explicit-exceptions
-    description: Avoid catching base 'Exception', use more specific exceptions instead.
-    pattern: 'try: $BODY except Exception as $E: $HANDLER'
+    description: Avoid catching base 'Exception'; use more specific exceptions instead.
+    pattern: |
+      try:
+        ${BODY}
+      except Exception as ${E}:
+        ${HANDLER}
     language: python
     replacement: |
       try:
-          $BODY
-      except (SpecificError1, SpecificError2) as $E:
-          $HANDLER
+          ${BODY}
+      except (ValueError, TypeError, IOError) as ${E}:
+          ${HANDLER}
     explanation: Catch specific exceptions to avoid swallowing important errors.
 
   - id: avoid-function-declarations-in-blocks
-    description: Avoid function declarations in blocks, use arrow functions instead.
-    pattern: 'function ${name}(${params}) ${body}'
-    replacement: 'const ${name} = (${params}) => ${body}'
+    description: Avoid function declarations in blocks.
+    pattern: |
+      def ${name}(${params}):
+        ${body}
+    language: python
+    replacement: |
+      def ${name}(${params}):
+        ${body}
+    explanation: Function declarations in blocks can lead to unexpected behavior.
 
   - id: custom-raise-from-previous-error
     description: Use 'raise ... from' syntax to preserve exception context.
-    pattern: 'except ${exception}:\n    ${body}\n    raise ${new_exception}'
-    replacement: 'except ${exception} as e:\n    raise ${new_exception} from e'
-
-rule_tags:
-  performance:
-    - inline-improvements
-    - function-extraction
-    - list-comprehension
+    pattern: |
+      try:
+        ${body}
+      except ${exception} as e:
+        ${body}
+        raise ${new_exception}
+    language: python
+    replacement: |
+      try:
+        ${body}
+      except ${exception} as e:
+        ${body}
+        raise ${new_exception} from e
+      except ${exception} as e:
+        ${body}
+        raise ${new_exception} from e
 
 metrics:
   quality_threshold: 15.0
@@ -90,5 +107,3 @@ clone_detection:
 
 proxy:
   url: "http://127.0.0.1:7890"
-  ssl_certs_file: ""
-  no_ssl_verify: false

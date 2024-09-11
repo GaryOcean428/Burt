@@ -6,8 +6,19 @@ import os
 from app.python.helpers.tool import Tool, Response
 from app.python.helpers.print_style import PrintStyle
 from chromadb.errors import InvalidDimensionException
+from app.python.helpers.rag_system import RAGSystem
+from app.python.helpers.redis_cache import RedisCache
+from app.python.helpers.pinecone_db import upsert_vectors, query_vectors, delete_vectors
+from app.python.helpers.mongodb_client import (
+    insert_document,
+    find_documents,
+    delete_document,
+)
+from typing import List, Dict, Any
+import uuid
 
 db: VectorDB | None = None
+rag_system = RAGSystem()
 
 
 class Memory(Tool):
@@ -38,24 +49,44 @@ class Memory(Tool):
         return Response(message=result, break_loop=False)
 
 
-def search(agent: Agent, query: str, count: int = 5, threshold: float = 0.1):
-    initialize(agent)
-    docs = db.search_similarity_threshold(query, count, threshold)
-    if len(docs) == 0:
+def search(agent: Agent, query: str, count: int = 5, threshold: float = 0.1) -> str:
+    vector = agent.get_embedding(query)
+    results = query_vectors(vector, top_k=count)
+
+    if not results.matches:
         return files.read_file("./prompts/fw.memories_not_found.md", query=query)
-    return "\n".join([f"ID: {doc.id}, Content: {doc.content}" for doc in docs])
+
+    memories = []
+    for match in results.matches:
+        if match.score < threshold:
+            continue
+        doc = find_documents("memories", {"vector_id": match.id})
+        if doc:
+            memories.append(f"ID: {doc['_id']}, Content: {doc['content']}")
+
+    return "\n".join(memories)
 
 
-def save(agent: Agent, text: str):
-    initialize(agent)
-    document_id = db.insert_document(text)
-    return files.read_file("./prompts/fw.memory_saved.md", memory_id=document_id)
+def save(agent: Agent, text: str) -> str:
+    vector = agent.get_embedding(text)
+    vector_id = str(uuid.uuid4())
+    upsert_vectors([{"id": vector_id, "values": vector}])
+
+    document_id = insert_document(
+        "memories", {"content": text, "vector_id": vector_id}
+    ).inserted_id
+
+    return files.read_file("./prompts/fw.memory_saved.md", memory_id=str(document_id))
 
 
-def delete(agent: Agent, ids_str: str):
-    initialize(agent)
+def delete(agent: Agent, ids_str: str) -> str:
     ids = extract_guids(ids_str)
-    deleted = db.delete_documents_by_ids(ids)
+    docs = find_documents("memories", {"_id": {"$in": ids}})
+    vector_ids = [doc["vector_id"] for doc in docs]
+
+    delete_vectors(vector_ids)
+    deleted = delete_document("memories", {"_id": {"$in": ids}}).deleted_count
+
     return files.read_file("./prompts/fw.memories_deleted.md", memory_count=deleted)
 
 
@@ -65,12 +96,19 @@ def forget(agent: Agent, query: str):
     return files.read_file("./prompts/fw.memories_deleted.md", memory_count=deleted)
 
 
-def upload_file(agent: Agent, file_path: str):
-    initialize(agent)
+def upload_file(agent: Agent, file_path: str) -> str:
     content = files.read_file(file_path)
-    document_id = db.insert_document(content, metadata={"source": file_path})
+    vector = agent.get_embedding(content)
+    vector_id = str(uuid.uuid4())
+    upsert_vectors([{"id": vector_id, "values": vector}])
+
+    document_id = insert_document(
+        "memories",
+        {"content": content, "vector_id": vector_id, "metadata": {"source": file_path}},
+    ).inserted_id
+
     return files.read_file(
-        "./prompts/fw.file_uploaded.md", file_path=file_path, memory_id=document_id
+        "./prompts/fw.file_uploaded.md", file_path=file_path, memory_id=str(document_id)
     )
 
 

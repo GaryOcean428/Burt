@@ -15,6 +15,12 @@ class MessageDict(TypedDict):
 class AgentConfig:
     chat_model: str
     embeddings_model: str
+    pinecone_api_key: str
+    pinecone_environment: str
+    pinecone_index_name: str
+    pinecone_dimension: int
+    pinecone_cloud: str
+    perplexity_api_key: str
 
     def __init__(self, **kwargs: Any):
         self.__dict__.update(kwargs)
@@ -29,7 +35,8 @@ class Agent:
         self.tools: Dict[str, Tool] = {}
         self.conversation_history: List[MessageDict] = []
         self.vector_db: Optional[VectorDB] = None
-        self.history = []  # Add this line
+        self.intervention_status: bool = False
+        self.data: Dict[str, Any] = {}
 
     def set_tools(self, tools: Dict[str, Tool]) -> None:
         self.tools = tools
@@ -38,17 +45,10 @@ class Agent:
         return self.tools
 
     def initialize_models(self) -> None:
-        self.chat_model = get_chat_model(self.config.chat_model)
-        if self.chat_model is None:
-            raise ValueError(
-                f"Failed to initialize chat model: {self.config.chat_model}"
-            )
-        self.embedding_model = get_embedding_model(self.config.embeddings_model)
-        if self.embedding_model is None:
-            raise ValueError(
-                f"Failed to initialize embedding model: "
-                f"{self.config.embeddings_model}"
-            )
+        if not self.chat_model:
+            self.chat_model = get_chat_model(self.config.chat_model)
+        if not self.embedding_model:
+            self.embedding_model = get_embedding_model(self.config.embeddings_model)
         self.vector_db = VectorDB(self.config.__dict__)
 
     async def process(
@@ -57,11 +57,7 @@ class Agent:
         if not self.chat_model:
             self.initialize_models()
 
-        chat_model = (
-            self.chat_model
-            if model_name == self.config.chat_model
-            else get_chat_model(model_name)
-        )
+        chat_model = get_chat_model(model_name)
 
         self.conversation_history.append({"role": "user", "content": input_text})
 
@@ -83,7 +79,13 @@ class Agent:
                 for msg in self.conversation_history
             ]
 
-            response = chat_model.create(messages, **params)
+            # Add a system message to ensure the model knows its identity
+            system_message = SystemMessage(
+                content=f"You are an AI assistant based on the {model_name} model. You do not have real-time information or the ability to browse the internet. Your knowledge is based on your training data. When asked about current events or to access tools, explain your limitations politely."
+            )
+            messages.insert(0, system_message)
+
+            response = await chat_model.ainvoke(messages)
 
             if isinstance(response, dict):
                 response_content = response.get("content", "")

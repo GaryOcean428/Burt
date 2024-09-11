@@ -22,12 +22,21 @@ class VectorDB:
     def __init__(self, config: Dict[str, Any]):
         self.config: Dict[str, Any] = config
         self.embedding_model = get_embedding_model(config["embeddings_model"])
-        self.index = faiss.IndexFlatL2(self.embedding_model.embedding_dim)
+        self.embedding_dim = 1536  # Default dimension for OpenAI embeddings
+        self.index = faiss.IndexFlatL2(self.embedding_dim)
         self.documents: Dict[str, Document] = {}
 
     def add_documents(self, documents: List[Document]) -> None:
         for doc in documents:
             embedding = self.embedding_model.embed_query(doc.content)
+            if len(embedding) != self.embedding_dim:
+                logging.warning(
+                    f"Embedding dimension mismatch. Expected {self.embedding_dim}, got {len(embedding)}. Adjusting index."
+                )
+                self.embedding_dim = len(embedding)
+                self.index = faiss.IndexFlatL2(self.embedding_dim)
+                # Rebuild index with new dimension
+                self.rebuild_index()
             self.index.add(np.array([embedding]))
             self.documents[doc.id] = doc
 
@@ -62,7 +71,7 @@ class VectorDB:
             self.rebuild_index()
 
     def rebuild_index(self):
-        self.index = faiss.IndexFlatL2(self.embedding_model.embedding_dim)
+        self.index = faiss.IndexFlatL2(self.embedding_dim)
         for doc in self.documents.values():
             embedding = self.embedding_model.embed_query(doc.content)
             self.index.add(np.array([embedding]))

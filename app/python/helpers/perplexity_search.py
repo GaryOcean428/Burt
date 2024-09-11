@@ -1,30 +1,75 @@
 import os
-import requests
 from dotenv import load_dotenv
+import logging
+from openai import OpenAI
+from typing import List, Dict, Union
 
 load_dotenv()
 
-PERPLEXITY_API_KEY = os.getenv("API_KEY_PERPLEXITY")
+PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
+logger = logging.getLogger(__name__)
 
 
-def perplexity_search(query, max_results=5):
-    if not PERPLEXITY_API_KEY:
-        return "Perplexity search is not available (API key not set)."
+def perplexity_search(
+    query: str,
+    max_results: int = 5,
+    api_key: str = None,
+    complexity: float = 0.5,
+    timeout: int = 30,
+    stream: bool = False,
+) -> Union[str, List[Dict[str, str]]]:
+    if not api_key:
+        api_key = PERPLEXITY_API_KEY
 
-    url = "https://api.perplexity.ai/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
-        "Content-Type": "application/json",
-    }
-    data = {
-        "model": "pplx-7b-online",
-        "messages": [{"role": "user", "content": query}],
-        "max_tokens": 1024,
-    }
+    if not api_key:
+        logger.warning(
+            "Perplexity API key not set. Falling back to alternative search method."
+        )
+        return "Perplexity search is not available (API key not set). Falling back to alternative search method."
+
+    client = OpenAI(api_key=api_key, base_url="https://api.perplexity.ai")
+
+    model = select_sonar_model(complexity)
+
+    messages = [
+        {
+            "role": "system",
+            "content": "You are a helpful AI assistant providing accurate and relevant information.",
+        },
+        {
+            "role": "user",
+            "content": f"Provide up to {max_results} relevant results for the query: {query}",
+        },
+    ]
 
     try:
-        response = requests.post(url, json=data, headers=headers)
-        response.raise_for_status()
-        return response.json()["choices"][0]["message"]["content"]
-    except requests.RequestException as e:
-        raise Exception(f"Error in Perplexity search: {str(e)}")
+        if stream:
+            response_stream = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True,
+                max_tokens=1024,
+                timeout=timeout,
+            )
+            return [
+                chunk.choices[0].delta.content
+                for chunk in response_stream
+                if chunk.choices[0].delta.content
+            ]
+        else:
+            response = client.chat.completions.create(
+                model=model, messages=messages, max_tokens=1024, timeout=timeout
+            )
+            return response.choices[0].message.content
+    except Exception as e:
+        logger.error(f"Error in Perplexity search: {str(e)}")
+        return f"An error occurred while performing the Perplexity search: {str(e)}"
+
+
+def select_sonar_model(complexity: float) -> str:
+    if complexity < 0.3:
+        return "llama-3-sonar-small-32k-online"
+    elif complexity < 0.7:
+        return "llama-3-sonar-medium-32k-online"
+    else:
+        return "llama-3-sonar-large-32k-online"

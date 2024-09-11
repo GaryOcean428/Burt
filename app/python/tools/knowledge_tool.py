@@ -1,27 +1,17 @@
 from ...agent import Agent
 from app.python.tools import online_knowledge_tool
-from app.python.helpers import duckduckgo_search
+from app.python.helpers import duckduckgo_search, perplexity_search
 from app.python.tools import memory_tool
-import concurrent.futures
 from app.python.helpers.tool import Tool, Response
-from app.python.helpers import files
-from app.python.helpers.print_style import PrintStyle
 from app.python.helpers import rate_limiter
 import logging
+from typing import Dict, Any
 
 logger = logging.getLogger(__name__)
 
 
-class RateLimiter:
-    def __enter__(self):
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        pass  # Add any cleanup code if necessary
-
-
 class KnowledgeTool(Tool):
-    name = "knowledge_tool"  # type: str
+    name: str = "knowledge_tool"
 
     def __init__(self, agent: Agent):
         super().__init__(agent)
@@ -47,11 +37,33 @@ class KnowledgeTool(Tool):
                 )
             else:
                 online_result = (
-                    "process_question is not available " "in online_knowledge_tool"
+                    "process_question is not available in online_knowledge_tool"
                 )
 
         combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"
         return Response(combined_result, break_loop=False)
+
+
+class OnlineKnowledgeTool(Tool):
+    def __init__(self, agent):
+        super().__init__(agent)
+        self.name = "online_knowledge_tool"
+        self.description = "Searches for up-to-date information online using Perplexity Sonar models, with fallback to DuckDuckGo."
+
+    def run(self, query: str) -> Response:
+        config = self.agent.config
+        result = self.process_question(query, config)
+        return Response(message=result)
+
+    def process_question(self, question: str, config: Dict[str, Any]) -> str:
+        if perplexity_api_key := config.get("PERPLEXITY_API_KEY"):
+            try:
+                return perplexity_search.search_with_sonar(question, perplexity_api_key)
+            except Exception as e:
+                logger.error(f"Perplexity Sonar search failed: {e}")
+
+        # Fallback to DuckDuckGo
+        return duckduckgo_search.search(question)
 
 
 # Ensure the Tool class is available for import
