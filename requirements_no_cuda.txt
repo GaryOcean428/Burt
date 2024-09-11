@@ -55,7 +55,7 @@ jsonpatch==1.33
 jsonpointer==3.0.0
 langchain==0.1.11
 langchain-anthropic==0.1.4
-langchain-community==0.0.26
+langchain-community==0.2.9
 langchain-core==0.1.52
 langchain-google-genai==1.0.4
 langchain-groq==0.0.1
@@ -92,7 +92,7 @@ python-dotenv==1.0.1
 python-xlib==0.33
 pyyaml==6.0.2
 regex==2024.7.24
-requests==2.32.2
+requests==2.32.3
 rsa==4.9
 safetensors==0.4.4
 scikit-learn==1.5.1
