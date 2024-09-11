@@ -7,16 +7,18 @@ import logging
 from typing import Dict, Any, List
 from app.models import get_model_list, get_chat_model
 from app.python.helpers.rate_limiter import RateLimiter
+from app.python.helpers.rag_system import RAGSystem
 import re
 from app.python.helpers.redis_cache import RedisCache
-import uuid
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
 class AdvancedRouter:
-    def __init__(self, config: Dict[str, Any], agent):
+    def __init__(
+        self, config: Dict[str, Any], agent, rag_system: RAGSystem | None = None
+    ):
         self.models = get_model_list()
         self.threshold = config.get("ROUTER_THRESHOLD", 0.7)
         self.rate_limiter = RateLimiter(
@@ -32,6 +34,7 @@ class AdvancedRouter:
             "high": "claude-3-opus-20240229",
             "superior": "claude-3-opus-20240229",
         }
+        self.rag_system = rag_system or RAGSystem()
 
     async def route(
         self, query: str, conversation_history: List[Dict[str, str]]
@@ -61,13 +64,8 @@ class AdvancedRouter:
             config = self._get_superior_tier_config(task_type)
 
         config["routing_explanation"] = (
-            "Selected "
-            + config["model"]
-            + " based on complexity ("
-            + "{:.2f}".format(complexity)
-            + ") and context length ("
-            + str(context_length)
-            + " chars). "
+            f"Selected {config['model']} based on complexity "
+            f"({complexity:.2f}) and context length ({context_length} chars). "
             f"Threshold: {self.threshold}"
         )
         config["question_type"] = question_type
@@ -158,7 +156,9 @@ class AdvancedRouter:
             "max_tokens": 50,
             "temperature": 0.7,
             "response_strategy": "casual_conversation",
-            "routing_explanation": "Simple greeting detected, using low-tier model for quick response.",
+            "routing_explanation": (
+                "Simple greeting detected, using low-tier model for quick response."
+            ),
         }
 
     def _get_low_tier_config(self, task_type: str) -> Dict[str, Any]:
@@ -177,7 +177,7 @@ class AdvancedRouter:
             "max_tokens": 512,
             "temperature": 0.7,
         }
-        if task_type in ["analysis", "creative"]:
+        if task_type in {"analysis", "creative"}:
             config["max_tokens"] = 768
         return config
 
@@ -187,7 +187,7 @@ class AdvancedRouter:
             "max_tokens": 1024,
             "temperature": 0.9,
         }
-        if task_type in ["coding", "analysis"]:
+        if task_type in {"coding", "analysis"}:
             config["temperature"] = 0.7
         return config
 
@@ -197,7 +197,7 @@ class AdvancedRouter:
             "max_tokens": 8192,
             "temperature": 0.7,
         }
-        if task_type in ["coding", "analysis"]:
+        if task_type in {"coding", "analysis"}:
             config["temperature"] = 0.5
         return config
 
@@ -208,7 +208,7 @@ class AdvancedRouter:
             "temperature": 0.3,
             "response_strategy": "memory_focused",
             "task_type": "memory_retrieval",
-            "task_complexity": 0.6
+            "task_complexity": 0.6,
         }
 
     def _adjust_params_based_on_history(
@@ -246,7 +246,7 @@ class AdvancedRouter:
 
             # Check if the query is about current information
             if config["task_type"] == "current_info":
-                return await self.process_online_knowledge_tool(query, params)
+                return await self.process_online_knowledge_tool(query, config)
 
             # Create a messages list with the conversation history and the new query
             messages = [
@@ -287,11 +287,14 @@ class AdvancedRouter:
             tool_info += f"- {tool_name}: {tool.description}\n"
 
         tool_info += (
-            "\nTo use a tool, format your request as: [TOOL_NAME] Your request here"
+            "\nTo use a tool, format your request as: " "[TOOL_NAME] Your request here"
         )
 
         return {
-            "content": f"I understand you want to use tools. Here's what's available:\n\n{tool_info}",
+            "content": (
+                f"I understand you want to use tools. "
+                f"Here's what's available:\n\n{tool_info}"
+            ),
             "model_used": config["model"],
             "task_type": "tool_use",
             "task_complexity": config["task_complexity"],
@@ -341,7 +344,7 @@ class AdvancedRouter:
             return {"error": f"Error processing memory tool: {str(e)}"}
 
     async def process_online_knowledge_tool(
-        self, query: str, params: Dict[str, Any]
+        self, query: str, config: Dict[str, Any]
     ) -> Dict[str, Any]:
         online_knowledge_tool = self.agent.tools.get("online_knowledge_tool")
         if not online_knowledge_tool:
@@ -350,18 +353,33 @@ class AdvancedRouter:
 
         try:
             logger.info(f"Processing query with online knowledge tool: {query}")
-            response = online_knowledge_tool.run(query)
-            logger.info(f"Online knowledge tool response: {response}")
+
+            # Use the hybrid query approach from RAGSystem without passing complexity
+            hybrid_response = self.rag_system.hybrid_query(query)
+
+            logger.info(f"Hybrid query response: {hybrid_response}")
+
             return {
-                "content": (
-                    response.message if hasattr(response, "message") else str(response)
-                ),
-                "model_used": "online_knowledge_tool",
+                "content": hybrid_response,
+                "model_used": "hybrid_rag_system",
                 "task_type": "current_info",
-                "task_complexity": 1.0,
+                "task_complexity": config["task_complexity"],
             }
         except Exception as e:
             logger.error(
                 f"Error processing online knowledge tool: {str(e)}", exc_info=True
             )
             return {"error": f"Error processing online knowledge tool: {str(e)}"}
+
+    def save_to_redis_cache(self, key: str, value: Any) -> None:
+        try:
+            RedisCache.set(key, value)
+        except Exception as e:
+            logger.error(f"Error saving to Redis cache: {str(e)}")
+
+    def get_from_redis_cache(self, key: str) -> Any:
+        try:
+            return RedisCache.get(key)
+        except Exception as e:
+            logger.error(f"Error retrieving from Redis cache: {str(e)}")
+            return None

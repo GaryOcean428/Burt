@@ -27,7 +27,6 @@ rule_settings:
     - use-with
     - return-early
     - merge-nested-ifs
-  disable: []
   rule_types:
     - refactoring
     - suggestion
@@ -36,36 +35,39 @@ rule_settings:
 
 rules:  # Custom rules for specific cases.
   - id: no-print-statements
-    description: Avoid using print statements in test files, use logging instead.
-    pattern: 'print($VAR)'
+    description: Avoid using print statements in test files; use logging instead.
+    pattern: 'print(${VAR})'
     language: python
     replacement: |
-      logging.info($VAR)
+      logging.info(${VAR})
     explanation: Use logging instead of print statements for better control and verbosity in test files.
     paths:
       include:
         - test
 
   - id: no-explicit-exceptions
-    description: Avoid catching base 'Exception', use more specific exceptions instead.
-    pattern: 'try: $BODY except Exception as $E: $HANDLER'
+    description: Avoid catching base 'Exception'; use more specific exceptions instead.
+    pattern: 'try:${BODY} except Exception as ${E}: ${HANDLER}'
     language: python
     replacement: |
       try:
-          $BODY
-      except (SpecificError1, SpecificError2) as $E:
-          $HANDLER
+          ${BODY}
+      except (ValueError, TypeError, IOError) as ${E}:
+          ${HANDLER}
     explanation: Catch specific exceptions to avoid swallowing important errors.
 
   - id: avoid-function-declarations-in-blocks
-    description: Avoid function declarations in blocks, use arrow functions instead.
-    pattern: 'function ${name}(${params}) ${body}'
-    replacement: 'const ${name} = (${params}) => ${body}'
+    description: Avoid function declarations in blocks.
+    pattern: 'def ${name}(${params}):\n    ${body}'
+    language: python
+    replacement: 'def ${name}(${params}):\n    ${body}'
+    explanation: Function declarations in blocks can lead to unexpected behavior.
 
   - id: custom-raise-from-previous-error
     description: Use 'raise ... from' syntax to preserve exception context.
-    pattern: 'except ${exception}:\n    ${body}\n    raise ${new_exception}'
-    replacement: 'except ${exception} as e:\n    raise ${new_exception} from e'
+    pattern: 'except ${exception} as e:\n    ${body}\n    raise ${new_exception} from e'
+    language: python
+    replacement: 'except ${exception} as e:\n    ${body}\n    raise ${new_exception} from e'
 
 rule_tags:
   performance:
@@ -90,5 +92,3 @@ clone_detection:
 
 proxy:
   url: "http://127.0.0.1:7890"
-  ssl_certs_file: ""
-  no_ssl_verify: false
