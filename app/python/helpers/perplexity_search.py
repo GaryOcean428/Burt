@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 def perplexity_search(
     query: str,
     max_results: int = 5,
-    api_key: str = None,
+    api_key: str | None = None,
     complexity: float = 0.5,
     timeout: int = 30,
     stream: bool = False,
@@ -46,7 +46,7 @@ def perplexity_search(
         if stream:
             response_stream = client.chat.completions.create(
                 model=model,
-                messages=messages,
+                messages=[{"role": msg["role"], "content": msg["content"]} for msg in messages],
                 stream=True,
                 max_tokens=1024,
                 timeout=timeout,
@@ -54,19 +54,23 @@ def perplexity_search(
             return [
                 chunk.choices[0].delta.content
                 for chunk in response_stream
-                if chunk.choices[0].delta.content
+                if chunk.choices[0].delta and chunk.choices[0].delta.content is not None
             ]
         else:
             response = client.chat.completions.create(
-                model=model, messages=messages, max_tokens=1024, timeout=timeout
+                model=model,
+                messages=[{"role": msg["role"], "content": msg["content"]} for msg in messages],
+                max_tokens=1024,
+                timeout=timeout
             )
-            return response.choices[0].message.content
+            return response.choices[0].message.content if response.choices else ""
     except Exception as e:
         logger.error(f"Error in Perplexity search: {str(e)}")
         return f"An error occurred while performing the Perplexity search: {str(e)}"
 
 
 def select_sonar_model(complexity: float) -> str:
+    # sourcery skip: avoid-function-declarations-in-blocks
     if complexity < 0.3:
         return "llama-3-sonar-small-32k-online"
     elif complexity < 0.7:

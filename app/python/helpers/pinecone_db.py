@@ -1,8 +1,8 @@
-from pinecone import Pinecone
+import pinecone
 import os
 from typing import List, Dict, Any
 
-pc = Pinecone(api_key=os.getenv("PINECONE_API_KEY"))
+pinecone.init(api_key=os.getenv("PINECONE_API_KEY"))
 
 index_name = os.getenv("PINECONE_INDEX_NAME")
 index = pc.Index(index_name)

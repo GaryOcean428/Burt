@@ -1,9 +1,8 @@
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, OpenAI
 from langchain_community.vectorstores import Pinecone as LangchainPinecone
 from pinecone import Pinecone, ServerlessSpec
-from langchain_openai import OpenAI
 from langchain.chains import RetrievalQA
-from .perplexity_search import perplexity_search, select_sonar_model
+from .perplexity_search import perplexity_search
 import os
 import logging
 
@@ -44,8 +43,10 @@ class RAGSystem:
         try:
             if use_perplexity:
                 complexity = self.assess_complexity(question)
-                return perplexity_search(question, complexity=complexity)
-            return self.qa.invoke(question)
+                perplexity_result = perplexity_search(question, complexity=complexity)
+                return str(perplexity_result)
+            qa_result = self.qa.invoke(question)
+            return str(qa_result)
         except Exception as e:
             logger.error(f"Error in RAG query: {str(e)}")
             return f"An error occurred while processing your query: {str(e)}"
