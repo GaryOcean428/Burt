@@ -25,9 +25,7 @@ test_config = {
 router = AdvancedRouter(test_config)
 
 # Test query
-test_query = (
-    "Analyze the impact of artificial intelligence on job markets in the next decade."
-)
+test_query = "Analyze the impact of artificial intelligence on job markets in the next decade."
 
 try:
     # Process the query

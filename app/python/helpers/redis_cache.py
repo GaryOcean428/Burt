@@ -64,7 +64,9 @@ except Exception as e:
 class RedisCache:
     # Local in-memory cache
     local_cache = OrderedDict()
-    MAX_LOCAL_CACHE_SIZE = 1000  # Adjust this value based on your memory constraints
+    MAX_LOCAL_CACHE_SIZE = (
+        1000  # Adjust this value based on your memory constraints
+    )
 
     @classmethod
     def set(cls, key: str, value: Any, expiration: int = 3600) -> None:
@@ -77,7 +79,9 @@ class RedisCache:
                 logger.info(f"Set key '{key}' in Docker Redis cache")
             else:
                 cls._set_local(key, value)
-                logger.info(f"Set key '{key}' in local cache (Redis unavailable)")
+                logger.info(
+                    f"Set key '{key}' in local cache (Redis unavailable)"
+                )
         except Exception as e:
             logger.error(f"Error setting cache for key '{key}': {str(e)}")
             cls._set_local(key, value)
@@ -93,12 +97,18 @@ class RedisCache:
             elif docker_redis_client and docker_redis_client.ping():
                 value = docker_redis_client.get(key)
                 if value:
-                    logger.info(f"Retrieved key '{key}' from Docker Redis cache")
+                    logger.info(
+                        f"Retrieved key '{key}' from Docker Redis cache"
+                    )
                     return json.loads(value)
             else:
-                logger.warning("Redis unavailable, falling back to local cache")
+                logger.warning(
+                    "Redis unavailable, falling back to local cache"
+                )
         except Exception as e:
-            logger.error(f"Error retrieving from Redis cache for key '{key}': {str(e)}")
+            logger.error(
+                f"Error retrieving from Redis cache for key '{key}': {str(e)}"
+            )
 
         # Fallback to local cache
         return cls._get_local(key)

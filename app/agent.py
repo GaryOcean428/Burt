@@ -48,7 +48,9 @@ class Agent:
         if not self.chat_model:
             self.chat_model = get_chat_model(self.config.chat_model)
         if not self.embedding_model:
-            self.embedding_model = get_embedding_model(self.config.embeddings_model)
+            self.embedding_model = get_embedding_model(
+                self.config.embeddings_model
+            )
         self.vector_db = VectorDB(self.config.__dict__)
 
     async def process(
@@ -59,7 +61,9 @@ class Agent:
 
         chat_model = get_chat_model(model_name)
 
-        self.conversation_history.append({"role": "user", "content": input_text})
+        self.conversation_history.append(
+            {"role": "user", "content": input_text}
+        )
 
         while True:
             if not chat_model:
@@ -124,7 +128,9 @@ class Agent:
                     "conversation_history": self.conversation_history,
                 }
 
-    def extract_tool_call(self, text: str) -> Optional[Tuple[str, Dict[str, Any]]]:
+    def extract_tool_call(
+        self, text: str
+    ) -> Optional[Tuple[str, Dict[str, Any]]]:
         pattern = r"\[TOOL_CALL\](.*?)\[/TOOL_CALL\]"
         if match := re.search(pattern, text, re.DOTALL):
             tool_call_json = match[1]

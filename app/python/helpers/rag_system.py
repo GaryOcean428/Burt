@@ -56,19 +56,25 @@ class RAGSystem:
             cache_key = f"rag_query:{question}"
             cached_result = RedisCache.get(cache_key)
             if cached_result:
-                logger.info(f"Retrieved cached result for question: {question[:50]}...")
+                logger.info(
+                    f"Retrieved cached result for question: {question[:50]}..."
+                )
                 return cached_result
 
             if use_perplexity:
                 complexity = self.assess_complexity(question)
-                perplexity_result = perplexity_search(question, complexity=complexity)
+                perplexity_result = perplexity_search(
+                    question, complexity=complexity
+                )
                 result = str(perplexity_result)
             else:
                 qa_result = self.qa.invoke(question)
                 result = str(qa_result)
 
             # Cache the result
-            RedisCache.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+            RedisCache.set(
+                cache_key, result, expiration=3600
+            )  # Cache for 1 hour
 
             return result
         except Exception as e:
@@ -124,14 +130,14 @@ class RAGSystem:
                 # Combine streaming results into a single string
                 perplexity_result = "".join(perplexity_result)
 
-                result = (
-                    f"Pinecone: {pinecone_result}\n\nPerplexity: {perplexity_result}"
-                )
+                result = f"Pinecone: {pinecone_result}\n\nPerplexity: {perplexity_result}"
             else:
                 result = str(pinecone_result)
 
             # Cache the result
-            RedisCache.set(cache_key, result, expiration=3600)  # Cache for 1 hour
+            RedisCache.set(
+                cache_key, result, expiration=3600
+            )  # Cache for 1 hour
 
             return result
         except Exception as e:

@@ -7,7 +7,8 @@ def truncate_text(output, threshold=1000):
 
     # Adjust the file path as needed
     placeholder = files.read_file(
-        "./prompts/fw.msg_truncated.md", removed_chars=(len(output) - threshold)
+        "./prompts/fw.msg_truncated.md",
+        removed_chars=(len(output) - threshold),
     )
 
     start_len = (threshold - len(placeholder)) // 2

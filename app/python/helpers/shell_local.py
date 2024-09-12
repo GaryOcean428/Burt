@@ -5,7 +5,9 @@ import shlex
 def execute_command(command):
     try:
         args = shlex.split(command)
-        result = subprocess.run(args, capture_output=True, text=True, check=True)
+        result = subprocess.run(
+            args, capture_output=True, text=True, check=True
+        )
         return result.stdout
     except subprocess.CalledProcessError as e:
         return f"Error: {e.stderr}"

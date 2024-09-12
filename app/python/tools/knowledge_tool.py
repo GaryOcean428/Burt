@@ -36,9 +36,7 @@ class KnowledgeTool(Tool):
                     question, self.agent.config
                 )
             else:
-                online_result = (
-                    "process_question is not available in online_knowledge_tool"
-                )
+                online_result = "process_question is not available in online_knowledge_tool"
 
         combined_result = f"Memory: {memory_result}\n\nOnline: {online_result}"
         return Response(combined_result, break_loop=False)
@@ -58,7 +56,9 @@ class OnlineKnowledgeTool(Tool):
     def process_question(self, question: str, config: Dict[str, Any]) -> str:
         if perplexity_api_key := config.get("PERPLEXITY_API_KEY"):
             try:
-                return perplexity_search.search_with_sonar(question, perplexity_api_key)
+                return perplexity_search.search_with_sonar(
+                    question, perplexity_api_key
+                )
             except Exception as e:
                 logger.error(f"Perplexity Sonar search failed: {e}")
 

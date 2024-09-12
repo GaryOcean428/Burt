@@ -22,7 +22,8 @@ nltk.download("punkt")
 nltk.download("stopwords")
 
 logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
 logger = logging.getLogger(__name__)
@@ -46,7 +47,10 @@ class PerformanceTracker:
 
 class AdvancedRouter:
     def __init__(
-        self, config: Dict[str, Any], agent: Any, rag_system: Optional[RAGSystem] = None
+        self,
+        config: Dict[str, Any],
+        agent: Any,
+        rag_system: Optional[RAGSystem] = None,
     ):
         self.models = get_model_list()
         self.threshold = config.get("ROUTER_THRESHOLD", 0.7)
@@ -83,7 +87,9 @@ class AdvancedRouter:
         logger.info(f"Task type: {task_type}")
         logger.info(f"Question type: {question_type}")
 
-        config = self._select_model_config(complexity, context_length, task_type)
+        config = self._select_model_config(
+            complexity, context_length, task_type
+        )
 
         config["routing_explanation"] = (
             f"Selected {config['model']} based on complexity "
@@ -97,7 +103,9 @@ class AdvancedRouter:
         config["task_type"] = task_type
         config["task_complexity"] = complexity
 
-        config = self._adjust_params_based_on_history(config, conversation_history)
+        config = self._adjust_params_based_on_history(
+            config, conversation_history
+        )
 
         logger.info(f"Final config: {config}")
 
@@ -146,14 +154,22 @@ class AdvancedRouter:
     def _identify_task_type(self, query: str) -> str:
         query_lower = query.lower()
         if any(
-            word in query_lower for word in ["code", "program", "function", "debug"]
+            word in query_lower
+            for word in ["code", "program", "function", "debug"]
         ):
             return "coding"
-        elif any(word in query_lower for word in ["analyze", "compare", "evaluate"]):
+        elif any(
+            word in query_lower for word in ["analyze", "compare", "evaluate"]
+        ):
             return "analysis"
-        elif any(word in query_lower for word in ["create", "generate", "write"]):
+        elif any(
+            word in query_lower for word in ["create", "generate", "write"]
+        ):
             return "creative"
-        elif any(word in query_lower for word in ["hi", "hello", "hey", "how are you"]):
+        elif any(
+            word in query_lower
+            for word in ["hi", "hello", "hey", "how are you"]
+        ):
             return "casual"
         elif any(
             word in query_lower
@@ -167,18 +183,27 @@ class AdvancedRouter:
         query_lower = query.lower()
         if any(word in query_lower for word in ["how", "why", "explain"]):
             return "problem_solving"
-        elif any(word in query_lower for word in ["what", "who", "where", "when"]):
+        elif any(
+            word in query_lower for word in ["what", "who", "where", "when"]
+        ):
             return "factual"
         elif query_lower.startswith(("is", "are", "can", "do", "does")):
             return "yes_no"
-        elif any(word in query_lower for word in ["compare", "contrast", "analyze"]):
+        elif any(
+            word in query_lower for word in ["compare", "contrast", "analyze"]
+        ):
             return "analysis"
-        elif any(word in query_lower for word in ["hi", "hello", "hey", "how are you"]):
+        elif any(
+            word in query_lower
+            for word in ["hi", "hello", "hey", "how are you"]
+        ):
             return "casual"
         else:
             return "open_ended"
 
-    def _get_response_strategy(self, question_type: str, task_type: str) -> str:
+    def _get_response_strategy(
+        self, question_type: str, task_type: str
+    ) -> str:
         if task_type == "casual" or question_type == "casual":
             return "casual_conversation"
 
@@ -214,9 +239,10 @@ class AdvancedRouter:
             tier: (
                 (
                     perf["avg_time"]
-                    / min(self.model_performance.values(), key=lambda x: x["avg_time"])[
-                        "avg_time"
-                    ]
+                    / min(
+                        self.model_performance.values(),
+                        key=lambda x: x["avg_time"],
+                    )["avg_time"]
                 )
                 if perf["count"] > 0
                 else 1.0
@@ -284,7 +310,9 @@ class AdvancedRouter:
         }
 
     def _adjust_params_based_on_history(
-        self, config: Dict[str, Any], conversation_history: List[Dict[str, str]]
+        self,
+        config: Dict[str, Any],
+        conversation_history: List[Dict[str, str]],
     ) -> Dict[str, Any]:
         if len(conversation_history) > 5:
             config["temperature"] = min(config["temperature"] * 1.1, 1.0)
@@ -296,13 +324,16 @@ class AdvancedRouter:
             config["max_tokens"] = min(int(config["max_tokens"] * 1.2), 8192)
 
         if len(conversation_history) >= 4 and all(
-            len(msg["content"].split()) < 10 for msg in conversation_history[-4:]
+            len(msg["content"].split()) < 10
+            for msg in conversation_history[-4:]
         ):
             config["max_tokens"] = max(128, int(config["max_tokens"] * 0.8))
 
         return config
 
-    async def process(self, query: str, params: Dict[str, Any]) -> Dict[str, Any]:
+    async def process(
+        self, query: str, params: Dict[str, Any]
+    ) -> Dict[str, Any]:
         try:
             conversation_history = params.get("conversation_history", [])
             config = await self.route(query, conversation_history)
@@ -310,7 +341,10 @@ class AdvancedRouter:
             if not self.agent.chat_model:
                 self.agent.initialize_models()
 
-            if "use tool" in query.lower() or "access your tools" in query.lower():
+            if (
+                "use tool" in query.lower()
+                or "access your tools" in query.lower()
+            ):
                 return await self.process_tool_request(query, config)
 
             if config["task_type"] == "current_info":
@@ -332,11 +366,15 @@ class AdvancedRouter:
             end_time = time.time()
 
             # Update model performance metrics
-            self._update_model_performance(config["model"], end_time - start_time)
+            self._update_model_performance(
+                config["model"], end_time - start_time
+            )
 
             return {
                 "content": (
-                    response.content if hasattr(response, "content") else str(response)
+                    response.content
+                    if hasattr(response, "content")
+                    else str(response)
                 ),
                 "model_used": config["model"],
                 "task_type": config["task_type"],
@@ -344,10 +382,14 @@ class AdvancedRouter:
                 "processing_time": end_time - start_time,
             }
         except Exception as e:
-            logger.error(f"Error in AdvancedRouter process: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error in AdvancedRouter process: {str(e)}", exc_info=True
+            )
             raise
 
-    def _update_model_performance(self, model: str, processing_time: float) -> None:
+    def _update_model_performance(
+        self, model: str, processing_time: float
+    ) -> None:
         perf = self.model_performance[model]
         perf["total_time"] += processing_time
         perf["count"] += 1
@@ -363,9 +405,7 @@ class AdvancedRouter:
             tool = self.agent.tools[tool_name]
             tool_info += f"- {tool_name}: {tool.description}\n"
 
-        tool_info += (
-            "\nTo use a tool, format your request as: [TOOL_NAME] Your request here"
-        )
+        tool_info += "\nTo use a tool, format your request as: [TOOL_NAME] Your request here"
 
         return {
             "content": f"I understand you want to use tools. Here's what's available:\n\n{tool_info}",
@@ -386,7 +426,9 @@ class AdvancedRouter:
                 self.rate_limiter.release()
         except AttributeError as e:
             logger.error(f"Rate limiter not properly initialized: {str(e)}")
-            raise RuntimeError("Rate limiter is not properly initialized") from e
+            raise RuntimeError(
+                "Rate limiter is not properly initialized"
+            ) from e
 
     async def process_knowledge_tool(
         self, query: str, params: Dict[str, Any]
@@ -400,7 +442,9 @@ class AdvancedRouter:
             response = knowledge_tool.execute(question=query)
             return {"content": response.content, "tool_used": "knowledge_tool"}
         except Exception as e:
-            logger.error(f"Error processing knowledge tool: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error processing knowledge tool: {str(e)}", exc_info=True
+            )
             return {"error": f"Error processing knowledge tool: {str(e)}"}
 
     async def process_memory_tool(
@@ -419,7 +463,9 @@ class AdvancedRouter:
             )
             return {"content": response, "tool_used": "memory_tool"}
         except Exception as e:
-            logger.error(f"Error processing memory tool: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error processing memory tool: {str(e)}", exc_info=True
+            )
             return {"error": f"Error processing memory tool: {str(e)}"}
 
     async def process_online_knowledge_tool(
@@ -431,7 +477,9 @@ class AdvancedRouter:
             return {"error": "Online knowledge tool not found"}
 
         try:
-            logger.info(f"Processing query with online knowledge tool: {query}")
+            logger.info(
+                f"Processing query with online knowledge tool: {query}"
+            )
 
             hybrid_response = self.rag_system.hybrid_query(query)
 
@@ -445,19 +493,26 @@ class AdvancedRouter:
             }
         except Exception as e:
             logger.error(
-                f"Error processing online knowledge tool: {str(e)}", exc_info=True
+                f"Error processing online knowledge tool: {str(e)}",
+                exc_info=True,
             )
-            return {"error": f"Error processing online knowledge tool: {str(e)}"}
+            return {
+                "error": f"Error processing online knowledge tool: {str(e)}"
+            }
 
     def save_to_redis_cache(self, key: str, value: Any) -> None:
         try:
             RedisCache.set(key, value)
         except Exception as e:
-            logger.error(f"Error saving to Redis cache: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error saving to Redis cache: {str(e)}", exc_info=True
+            )
 
     def get_from_redis_cache(self, key: str) -> Any:
         try:
             return RedisCache.get(key)
         except Exception as e:
-            logger.error(f"Error retrieving from Redis cache: {str(e)}", exc_info=True)
+            logger.error(
+                f"Error retrieving from Redis cache: {str(e)}", exc_info=True
+            )
             return None

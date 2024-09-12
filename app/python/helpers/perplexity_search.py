@@ -75,7 +75,8 @@ def perplexity_search(
             response_stream = client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": msg["role"], "content": msg["content"]} for msg in messages
+                    {"role": msg["role"], "content": msg["content"]}
+                    for msg in messages
                 ],
                 stream=True,
                 max_tokens=1024,
@@ -84,18 +85,22 @@ def perplexity_search(
             result = [
                 chunk.choices[0].delta.content
                 for chunk in response_stream
-                if chunk.choices[0].delta and chunk.choices[0].delta.content is not None
+                if chunk.choices[0].delta
+                and chunk.choices[0].delta.content is not None
             ]
         else:
             response = client.chat.completions.create(
                 model=model,
                 messages=[
-                    {"role": msg["role"], "content": msg["content"]} for msg in messages
+                    {"role": msg["role"], "content": msg["content"]}
+                    for msg in messages
                 ],
                 max_tokens=1024,
                 timeout=timeout,
             )
-            result = response.choices[0].message.content if response.choices else ""
+            result = (
+                response.choices[0].message.content if response.choices else ""
+            )
 
         # Cache the result
         RedisCache.set(
@@ -137,7 +142,9 @@ def assess_complexity(query: str) -> float:
     lexical_diversity = len(set(tokens)) / len(tokens) if tokens else 0
 
     # Calculate average word length
-    avg_word_length = sum(len(word) for word in tokens) / len(tokens) if tokens else 0
+    avg_word_length = (
+        sum(len(word) for word in tokens) / len(tokens) if tokens else 0
+    )
 
     # Count special characters and numbers
     special_chars = sum(

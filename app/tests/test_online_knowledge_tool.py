@@ -21,7 +21,9 @@ class TestOnlineKnowledgeTool(unittest.TestCase):
 
     @patch("app.python.helpers.perplexity_search.perplexity_search")
     @patch("app.python.helpers.duckduckgo_search.search")
-    def test_fallback_to_duckduckgo(self, mock_ddg_search, mock_perplexity_search):
+    def test_fallback_to_duckduckgo(
+        self, mock_ddg_search, mock_perplexity_search
+    ):
         mock_perplexity_search.side_effect = Exception("Perplexity API error")
         mock_ddg_search.return_value = "DuckDuckGo search result"
         result = self.tool.process_question(
@@ -29,7 +31,9 @@ class TestOnlineKnowledgeTool(unittest.TestCase):
         )
         self.assertEqual(result, "DuckDuckGo search result")
         mock_perplexity_search.assert_called_once()
-        mock_ddg_search.assert_called_once_with("What is the capital of France?")
+        mock_ddg_search.assert_called_once_with(
+            "What is the capital of France?"
+        )
 
 
 if __name__ == "__main__":

@@ -182,10 +182,22 @@ class DirtyJson:
         result = ""
         quote_char = self.current_char
         self._advance()  # Skip opening quote
-        while self.current_char is not None and self.current_char != quote_char:
+        while (
+            self.current_char is not None and self.current_char != quote_char
+        ):
             if self.current_char == "\\":
                 self._advance()
-                if self.current_char in ['"', "'", "\\", "/", "b", "f", "n", "r", "t"]:
+                if self.current_char in [
+                    '"',
+                    "'",
+                    "\\",
+                    "/",
+                    "b",
+                    "f",
+                    "n",
+                    "r",
+                    "t",
+                ]:
                     result += {
                         "b": "\b",
                         "f": "\f",

@@ -124,9 +124,9 @@ class CodeExecution(Tool):
 
         self.state.shell.execute_command(command)
 
-        PrintStyle(background_color="white", font_color="#1B4F72", bold=True).print(
-            f"{self.agent.agent_name} code execution output:"
-        )
+        PrintStyle(
+            background_color="white", font_color="#1B4F72", bold=True
+        ).print(f"{self.agent.agent_name} code execution output:")
         return self.get_terminal_output()
 
     def get_terminal_output(self):
@@ -145,7 +145,9 @@ class CodeExecution(Tool):
                 idle = 0
             else:
                 idle += 1
-                if (full_output and idle > 30) or (not full_output and idle > 100):
+                if (full_output and idle > 30) or (
+                    not full_output and idle > 100
+                ):
                     return full_output
 
 

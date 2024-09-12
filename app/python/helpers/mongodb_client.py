@@ -63,7 +63,9 @@ def insert_document(collection_name: str, document: dict):
     try:
         if db:
             result = db[collection_name].insert_one(document)
-            logger.info(f"Document inserted successfully: {result.inserted_id}")
+            logger.info(
+                f"Document inserted successfully: {result.inserted_id}"
+            )
             return result
         else:
             return fallback_insert(collection_name, document)

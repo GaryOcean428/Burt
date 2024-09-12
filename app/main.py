@@ -42,7 +42,9 @@ pinecone_api_key = os.getenv("PINECONE_API_KEY")
 pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
 
-logger.info(f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}")
+logger.info(
+    f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}"
+)
 logger.info(f"Pinecone API Key: {'Set' if pinecone_api_key else 'Not set'}")
 logger.info(f"Pinecone Environment: {pinecone_environment}")
 logger.info(f"Pinecone Index Name: {pinecone_index_name}")
@@ -150,7 +152,10 @@ router = AdvancedRouter(config, agent, rag_system)
 
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
 
 
 def extract_text_from_file(file_path):
@@ -222,9 +227,13 @@ async def query():
     logger.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        conversation_history = RedisCache.get(f"conversation:{conversation_id}") or []
+        conversation_history = (
+            RedisCache.get(f"conversation:{conversation_id}") or []
+        )
     except Exception as e:
-        logger.error(f"Error retrieving conversation history from Redis: {str(e)}")
+        logger.error(
+            f"Error retrieving conversation history from Redis: {str(e)}"
+        )
         conversation_history = []
 
     conversation_history.append({"role": "user", "content": user_input})
@@ -245,12 +254,18 @@ async def query():
         logger.info(f"Task complexity: {task_complexity}")
         logger.info(f"Response content: {response_content[:100]}...")
 
-        conversation_history.append({"role": "assistant", "content": response_content})
+        conversation_history.append(
+            {"role": "assistant", "content": response_content}
+        )
 
         try:
-            RedisCache.set(f"conversation:{conversation_id}", conversation_history)
+            RedisCache.set(
+                f"conversation:{conversation_id}", conversation_history
+            )
         except Exception as e:
-            logger.error(f"Error saving conversation history to Redis: {str(e)}")
+            logger.error(
+                f"Error saving conversation history to Redis: {str(e)}"
+            )
 
         response_metadata = {
             "model_used": selected_model,
@@ -266,9 +281,13 @@ async def query():
             }
         )
     except Exception as e:
-        logger.error(f"Unexpected error in query processing: {str(e)}", exc_info=True)
+        logger.error(
+            f"Unexpected error in query processing: {str(e)}", exc_info=True
+        )
         return (
-            jsonify({"error": "An unexpected error occurred", "details": str(e)}),
+            jsonify(
+                {"error": "An unexpected error occurred", "details": str(e)}
+            ),
             500,
         )
 

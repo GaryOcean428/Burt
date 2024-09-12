@@ -6,7 +6,9 @@ from typing import Optional
 class AgentZeroException(Exception):
     """Base exception class for AgentZero project."""
 
-    def __init__(self, message: str, original_exception: Optional[Exception] = None):
+    def __init__(
+        self, message: str, original_exception: Optional[Exception] = None
+    ):
         super().__init__(message)
         self.original_exception = original_exception
 

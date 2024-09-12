@@ -21,7 +21,10 @@ from app.python.helpers.mongodb_client import (
     delete_document,
     check_mongodb_health,
 )
-from app.python.helpers.perplexity_search import perplexity_search, assess_complexity
+from app.python.helpers.perplexity_search import (
+    perplexity_search,
+    assess_complexity,
+)
 from app.config import load_config
 
 
@@ -50,7 +53,9 @@ class TestBurtonAISystem(unittest.TestCase):
 
     def test_file_upload_and_rag(self):
         test_text = "This is a test document for the RAG system."
-        self.rag_system.add_document(test_text, metadata={"filename": "test.txt"})
+        self.rag_system.add_document(
+            test_text, metadata={"filename": "test.txt"}
+        )
 
         result = self.rag_system.query("What is this document about?")
         self.assertIsInstance(result, str)
@@ -79,7 +84,9 @@ class TestBurtonAISystem(unittest.TestCase):
         self.assertIsNotNone(query_result)
         self.assertTrue(len(query_result["matches"]) > 0)
         self.assertEqual(query_result["matches"][0]["id"], "test_vector")
-        self.assertEqual(query_result["matches"][0]["metadata"], {"test": "data"})
+        self.assertEqual(
+            query_result["matches"][0]["metadata"], {"test": "data"}
+        )
 
         # Test delete
         delete_result = delete_vectors(["test_vector"])
@@ -120,7 +127,9 @@ class TestBurtonAISystem(unittest.TestCase):
         insert_result = insert_document("test_collection", test_document)
         self.assertIsNotNone(insert_result)
 
-        find_result = find_documents("test_collection", {"test_field": "test_value"})
+        find_result = find_documents(
+            "test_collection", {"test_field": "test_value"}
+        )
         self.assertTrue(len(find_result) > 0)
 
         update_result = update_document(
