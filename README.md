@@ -241,3 +241,13 @@ To run the test suite and verify the project's functionality:
 4. Save the file and close the editor.
 
 IMPORTANT: Never commit your `.env` file to version control. It contains sensitive information that should be kept private.
+
+## Code Style
+
+This project uses [Black](https://github.com/psf/black) for code formatting. To ensure your code is formatted correctly, run:
+
+```sh
+black .
+```
+
+We recommend setting up your editor to run Black automatically on save.

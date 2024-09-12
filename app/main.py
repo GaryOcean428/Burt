@@ -15,7 +15,14 @@ from dotenv import load_dotenv
 import uuid
 from app.python.helpers.redis_cache import RedisCache
 import PyPDF2
+import docx
 import io
+import nltk
+
+# Download NLTK resources
+nltk.download("punkt_tab", quiet=True)
+nltk.download("punkt", quiet=True)
+nltk.download("stopwords", quiet=True)
 
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -77,7 +84,7 @@ CORS(app)
 
 # Set up file upload configuration
 UPLOAD_FOLDER = os.path.join(project_root, "uploads")
-ALLOWED_EXTENSIONS = {"pdf"}
+ALLOWED_EXTENSIONS = {"pdf", "txt", "docx"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Prepare the configuration for AgentConfig
@@ -146,6 +153,27 @@ def allowed_file(filename):
     return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+def extract_text_from_file(file_path):
+    file_extension = os.path.splitext(file_path)[1].lower()
+
+    if file_extension == ".pdf":
+        with open(file_path, "rb") as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+    elif file_extension == ".txt":
+        with open(file_path, "r", encoding="utf-8") as txt_file:
+            text = txt_file.read()
+    elif file_extension == ".docx":
+        doc = docx.Document(file_path)
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+    else:
+        raise ValueError(f"Unsupported file type: {file_extension}")
+
+    return text
+
+
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -163,15 +191,8 @@ def upload_file():
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
 
-        # Process the PDF file
         try:
-            with open(filepath, "rb") as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                text = ""
-                for page in pdf_reader.pages:
-                    text += page.extract_text()
-
-            # Add the extracted text to the RAG system
+            text = extract_text_from_file(filepath)
             rag_system.add_document(text, metadata={"filename": filename})
 
             return (
@@ -184,8 +205,8 @@ def upload_file():
                 200,
             )
         except Exception as e:
-            logger.error(f"Error processing PDF: {str(e)}")
-            return jsonify({"error": "Error processing PDF"}), 500
+            logger.error(f"Error processing file: {str(e)}")
+            return jsonify({"error": f"Error processing file: {str(e)}"}), 500
     else:
         return jsonify({"error": "File type not allowed"}), 400
 

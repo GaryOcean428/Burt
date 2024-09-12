@@ -1,0 +1,140 @@
+DEV NOTES:
+
+1. Completed Tasks:
+   [Previous completed tasks remain unchanged]
+
+   i. AdvancedRouter Fix:
+      - Updated the _select_model_config method in app/advanced_router.py to use the .get() method when accessing performance_factor values.
+      - This change prevents KeyError exceptions when a tier hasn't been used yet and doesn't have an entry in the performance_factor dictionary.
+      - The relevant part of the method now looks like this:
+        ```python
+        elif (
+            complexity < self.threshold
+            and context_length < 4000
+            and performance_factor.get("mid", 1.0) <= 1.2
+        ):
+            return self._get_mid_tier_config(task_type)
+        ```
+      - Similar changes were applied to other tier checks in the method.
+
+         i. AdvancedRouter Fix:
+      - Updated the _select_model_config method in app/advanced_router.py to use the .get() method when accessing performance_factor values.
+      - This change prevents KeyError exceptions when a tier hasn't been used yet and doesn't have an entry in the performance_factor dictionary.
+      - The relevant part of the method now looks like this:
+        ```python
+        elif (
+            complexity < self.threshold
+            and context_length < 4000
+            and performance_factor.get("mid", 1.0) <= 1.2
+        ):
+            return self._get_mid_tier_config(task_type)
+        ```
+      - Similar changes were applied to other tier checks in the method.
+
+
+2. Current State:
+   - The KeyError issue in the AdvancedRouter should now be resolved.
+   - The application should be able to process queries without encountering the previous error.
+
+3. Next Steps:
+   a. Test the application:
+      - Run the application using the command: `poetry run python -m app.main --verbose`
+      - Test various queries, especially those that might trigger different model tiers.
+      - Verify that no KeyError exceptions occur during query processing.
+
+   b. Code Quality Improvements:
+      - Run Flake8 on the entire project: `poetry run flake8`
+      - Address any remaining linting issues, with special attention to:
+        1. app/main.py
+        2. app/python/helpers/perplexity_search.py
+        3. app/python/helpers/rag_system.py
+        4. app/advanced_router.py
+
+   c. Type Hinting and Pylance Errors:
+      - Review and address Pylance errors, particularly in:
+        1. rag_system.py
+        2. perplexity_search.py
+      - Improve type hinting to resolve "reportArgumentType" and "reportAttributeAccessIssue" errors.
+
+   d. Performance Optimization:
+      - Profile Pinecone and MongoDB operations.
+      - Identify and optimize any performance bottlenecks.
+
+   e. Documentation Update:
+      - Update README.md to reflect:
+        1. The new Poetry setup for dependency management.
+        2. Updated Pinecone initialization process.
+        3. NLTK resource requirements and automatic download process.
+        4. Recent changes to the AdvancedRouter and error handling improvements.
+
+4. Considerations:
+   - Continue to ensure all dictionary accesses in the router logic are using safe methods to prevent KeyError exceptions.
+   - Consider adding more detailed logging statements to track the values of key variables (like performance_factor) for easier debugging.
+   - Maintain compatibility with the Poetry environment throughout all changes.
+   - Regularly test to prevent regressions in functionality.
+
+5. Future Enhancements:
+   - Consider implementing a more robust error handling system throughout the application.
+   - Evaluate the possibility of adding unit tests for the AdvancedRouter and other critical components.
+   - Explore options for improving the performance metrics collection and analysis for model selection.
+
+6. Recent Recommendations:
+   a. Testing:
+      - Conduct thorough testing of the AdvancedRouter, especially the _select_model_config method, to ensure the KeyError fix works as expected.
+      - Create a set of test queries that cover different complexity levels, context lengths, and task types to verify the model selection logic.
+
+   b. Code Quality:
+      - In addition to addressing linting issues, consider using a tool like Black for consistent code formatting across the project.
+      - Implement more comprehensive error handling in the AdvancedRouter class, particularly in the process method.
+
+   c. Type Hinting:
+      - Add type hints to all methods in the AdvancedRouter class, including return types.
+      - Use mypy in addition to Pylance for static type checking.
+
+   d. Performance:
+      - Implement caching for frequently accessed data in the AdvancedRouter, such as model configurations.
+      - Consider using asyncio more extensively throughout the application for improved concurrency.
+
+   e. Documentation:
+      - Create a separate CHANGELOG.md file to track all significant changes to the project.
+      - Add inline documentation to complex methods in the AdvancedRouter class, explaining the logic behind model selection and parameter adjustments.
+
+   f. Refactoring:
+      - Consider breaking down the AdvancedRouter class into smaller, more focused classes (e.g., ModelSelector, PerformanceTracker) to improve maintainability.
+      - Implement a strategy pattern for different routing strategies, allowing for easier addition of new routing algorithms in the future.
+
+   g. Monitoring and Logging:
+      - Implement more detailed logging throughout the AdvancedRouter class, including input parameters and decision points in the routing process.
+      - Consider integrating a monitoring solution to track performance metrics and errors in real-time.
+
+   h. Security:
+      - Review the handling of sensitive information (e.g., API keys) in the configuration and ensure they are not logged or exposed.
+      - Implement input validation for all user-provided data to prevent potential security vulnerabilities.
+
+   i. Scalability:
+      - Evaluate the current rate limiting implementation and consider more advanced strategies that can adapt to varying load conditions.
+      - Explore options for distributed processing of queries if the application needs to handle higher loads in the future.
+
+Remember to prioritize these recommendations based on the project's current needs and resources. Implement changes incrementally and continue to test thoroughly after each significant modification.
+
+Path to this documentation: d:\HDev\burton\documentation.txt
+
+Remember: All modifications should consider the project holistically. Avoid changes that might reduce existing or intended capabilities of the project.
+
+7. Recent Updates:
+   a. AdvancedRouter Fix:
+      - Added a PerformanceTracker class to handle performance tracking for different model tiers.
+      - Updated the AdvancedRouter class to initialize a performance_tracker attribute.
+      - This fix addresses the AttributeError that was occurring when processing queries.
+
+   b. Frontend Issue:
+      - Identified an issue where the thread history in the left sidebar displays past prompts instead of threads.
+      - TODO: Update the frontend code to properly display conversation threads.
+
+8. Next Steps:
+   a. Implement the update_performance method in the PerformanceTracker class to adjust performance factors based on processing times.
+   b. Update the frontend code to correctly display conversation threads in the left sidebar.
+   c. Conduct thorough testing of the AdvancedRouter with various query types to ensure stability.
+   d. Review and update error handling in the main query processing flow to provide more informative error messages to users.
+
+Remember: All modifications should consider the project holistically. Avoid changes that might reduce existing or intended capabilities of the project.
