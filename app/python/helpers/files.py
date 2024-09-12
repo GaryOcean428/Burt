@@ -25,7 +25,9 @@ def get_abs_path(relative_path):
 
     try:
         abs_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "..", "..", "..", relative_path)
+            os.path.join(
+                os.path.dirname(__file__), "..", "..", "..", relative_path
+            )
         )
         logger.info(
             f"Converted relative path '{relative_path}' to absolute path '{abs_path}'"

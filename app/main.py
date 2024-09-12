@@ -15,7 +15,14 @@ from dotenv import load_dotenv
 import uuid
 from app.python.helpers.redis_cache import RedisCache
 import PyPDF2
+import docx
 import io
+import nltk
+
+# Download NLTK resources
+nltk.download("punkt_tab", quiet=True)
+nltk.download("punkt", quiet=True)
+nltk.download("stopwords", quiet=True)
 
 # Add the project root to the Python path
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -35,7 +42,9 @@ pinecone_api_key = os.getenv("PINECONE_API_KEY")
 pinecone_environment = os.getenv("PINECONE_ENVIRONMENT")
 pinecone_index_name = os.getenv("PINECONE_INDEX_NAME")
 
-logger.info(f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}")
+logger.info(
+    f"Perplexity API Key: {'Set' if perplexity_api_key else 'Not set'}"
+)
 logger.info(f"Pinecone API Key: {'Set' if pinecone_api_key else 'Not set'}")
 logger.info(f"Pinecone Environment: {pinecone_environment}")
 logger.info(f"Pinecone Index Name: {pinecone_index_name}")
@@ -77,7 +86,7 @@ CORS(app)
 
 # Set up file upload configuration
 UPLOAD_FOLDER = os.path.join(project_root, "uploads")
-ALLOWED_EXTENSIONS = {"pdf"}
+ALLOWED_EXTENSIONS = {"pdf", "txt", "docx"}
 app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 # Prepare the configuration for AgentConfig
@@ -143,7 +152,31 @@ router = AdvancedRouter(config, agent, rag_system)
 
 
 def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
+
+
+def extract_text_from_file(file_path):
+    file_extension = os.path.splitext(file_path)[1].lower()
+
+    if file_extension == ".pdf":
+        with open(file_path, "rb") as pdf_file:
+            pdf_reader = PyPDF2.PdfReader(pdf_file)
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text()
+    elif file_extension == ".txt":
+        with open(file_path, "r", encoding="utf-8") as txt_file:
+            text = txt_file.read()
+    elif file_extension == ".docx":
+        doc = docx.Document(file_path)
+        text = "\n".join([paragraph.text for paragraph in doc.paragraphs])
+    else:
+        raise ValueError(f"Unsupported file type: {file_extension}")
+
+    return text
 
 
 @app.route("/")
@@ -163,15 +196,8 @@ def upload_file():
         filepath = os.path.join(app.config["UPLOAD_FOLDER"], filename)
         file.save(filepath)
 
-        # Process the PDF file
         try:
-            with open(filepath, "rb") as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                text = ""
-                for page in pdf_reader.pages:
-                    text += page.extract_text()
-
-            # Add the extracted text to the RAG system
+            text = extract_text_from_file(filepath)
             rag_system.add_document(text, metadata={"filename": filename})
 
             return (
@@ -184,8 +210,8 @@ def upload_file():
                 200,
             )
         except Exception as e:
-            logger.error(f"Error processing PDF: {str(e)}")
-            return jsonify({"error": "Error processing PDF"}), 500
+            logger.error(f"Error processing file: {str(e)}")
+            return jsonify({"error": f"Error processing file: {str(e)}"}), 500
     else:
         return jsonify({"error": "File type not allowed"}), 400
 
@@ -201,9 +227,13 @@ async def query():
     logger.info(f"Processing advanced query: {user_input[:20]}...")
 
     try:
-        conversation_history = RedisCache.get(f"conversation:{conversation_id}") or []
+        conversation_history = (
+            RedisCache.get(f"conversation:{conversation_id}") or []
+        )
     except Exception as e:
-        logger.error(f"Error retrieving conversation history from Redis: {str(e)}")
+        logger.error(
+            f"Error retrieving conversation history from Redis: {str(e)}"
+        )
         conversation_history = []
 
     conversation_history.append({"role": "user", "content": user_input})
@@ -224,12 +254,18 @@ async def query():
         logger.info(f"Task complexity: {task_complexity}")
         logger.info(f"Response content: {response_content[:100]}...")
 
-        conversation_history.append({"role": "assistant", "content": response_content})
+        conversation_history.append(
+            {"role": "assistant", "content": response_content}
+        )
 
         try:
-            RedisCache.set(f"conversation:{conversation_id}", conversation_history)
+            RedisCache.set(
+                f"conversation:{conversation_id}", conversation_history
+            )
         except Exception as e:
-            logger.error(f"Error saving conversation history to Redis: {str(e)}")
+            logger.error(
+                f"Error saving conversation history to Redis: {str(e)}"
+            )
 
         response_metadata = {
             "model_used": selected_model,
@@ -245,9 +281,13 @@ async def query():
             }
         )
     except Exception as e:
-        logger.error(f"Unexpected error in query processing: {str(e)}", exc_info=True)
+        logger.error(
+            f"Unexpected error in query processing: {str(e)}", exc_info=True
+        )
         return (
-            jsonify({"error": "An unexpected error occurred", "details": str(e)}),
+            jsonify(
+                {"error": "An unexpected error occurred", "details": str(e)}
+            ),
             500,
         )
 

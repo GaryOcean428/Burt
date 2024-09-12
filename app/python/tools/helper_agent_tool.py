@@ -52,7 +52,9 @@ class HelperAgentTool(Tool):
             Response: A Response object containing the results from helper agents.
         """
         task = kwargs.get("task", "")
-        responses = {agent.model: agent.process(task) for agent in helper_agents}
+        responses = {
+            agent.model: agent.process(task) for agent in helper_agents
+        }
         result = f"Processed task with {len(helper_agents)} helper agents"
         response_message = f"{result}\n\nHelper agent responses:\n"
         for model, response in responses.items():

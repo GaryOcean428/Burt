@@ -60,12 +60,18 @@ def calibrate_thresholds(
     """
     Calibrate the complexity thresholds for the AdvancedRouter and Sonar models.
     """
-    complexities = [router._assess_complexity(query["content"]) for query in queries]
+    complexities = [
+        router._assess_complexity(query["content"]) for query in queries
+    ]
 
     def count_model_calls(threshold):
         low_calls = sum(c < threshold / 2 for c in complexities)
-        mid_calls = sum(1 for c in complexities if threshold / 2 <= c < threshold)
-        high_calls = sum(1 for c in complexities if threshold <= c < threshold * 1.5)
+        mid_calls = sum(
+            1 for c in complexities if threshold / 2 <= c < threshold
+        )
+        high_calls = sum(
+            1 for c in complexities if threshold <= c < threshold * 1.5
+        )
         superior_calls = sum(1 for c in complexities if c >= threshold * 1.5)
         return low_calls, mid_calls, high_calls, superior_calls
 
@@ -107,10 +113,14 @@ def calibrate_thresholds(
         for c in complexities
     ]
     sonar_small_calls = sum(
-        1 for model in sonar_models if model == "llama-3-sonar-small-32k-online"
+        1
+        for model in sonar_models
+        if model == "llama-3-sonar-small-32k-online"
     )
     sonar_medium_calls = sum(
-        1 for model in sonar_models if model == "llama-3-sonar-medium-32k-online"
+        1
+        for model in sonar_models
+        if model == "llama-3-sonar-medium-32k-online"
     )
 
     total_calls = len(queries)
@@ -212,8 +222,12 @@ def main():
     logger.info(f"  {args.high_model_pct*100}% high-tier")
     logger.info(f"  {args.superior_model_pct*100}% superior-tier model calls:")
     logger.info(f"Main threshold: {optimal_threshold}")
-    logger.info(f"Sonar small threshold: {sonar_thresholds['sonar_small_threshold']}")
-    logger.info(f"Sonar medium threshold: {sonar_thresholds['sonar_medium_threshold']}")
+    logger.info(
+        f"Sonar small threshold: {sonar_thresholds['sonar_small_threshold']}"
+    )
+    logger.info(
+        f"Sonar medium threshold: {sonar_thresholds['sonar_medium_threshold']}"
+    )
 
     # Save results
     results = {

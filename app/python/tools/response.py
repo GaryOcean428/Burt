@@ -11,7 +11,9 @@ from python.helpers.print_style import PrintStyle
 class ResponseTool(Tool):
 
     def execute(self, **kwargs):
-        self.agent.set_data("timeout", self.agent.config.response_timeout_seconds)
+        self.agent.set_data(
+            "timeout", self.agent.config.response_timeout_seconds
+        )
         return Response(message=self.args["text"], break_loop=True)
 
     def before_execution(self, **kwargs):

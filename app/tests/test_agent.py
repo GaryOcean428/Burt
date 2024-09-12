@@ -66,12 +66,15 @@ class TestAgent(unittest.TestCase):
     def test_memory_management(self):
         initial_history_length = len(self.agent.get_history())
         messages = [
-            f"Test input {i}" for i in range(self.agent.config.rate_limit_msgs + 5)
+            f"Test input {i}"
+            for i in range(self.agent.config.rate_limit_msgs + 5)
         ]
         for message in messages:
             self.agent.process(message)
         final_history_length = len(self.agent.get_history())
-        self.assertLessEqual(final_history_length, self.agent.config.msgs_keep_max)
+        self.assertLessEqual(
+            final_history_length, self.agent.config.msgs_keep_max
+        )
 
     @patch("app.agent.Agent.use_tool")
     def test_planner_and_executor(self, mock_use_tool):
@@ -82,7 +85,9 @@ class TestAgent(unittest.TestCase):
         self.assertIn("Planned step executed", result)
 
     def test_error_handling(self):
-        with patch("app.agent.Agent.use_tool", side_effect=Exception("Test error")):
+        with patch(
+            "app.agent.Agent.use_tool", side_effect=Exception("Test error")
+        ):
             result = self.agent.process("Trigger an error")
             self.assertIn("An error occurred", result)
 

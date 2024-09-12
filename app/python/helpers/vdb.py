@@ -11,7 +11,10 @@ class Document:
     metadata: Dict[str, Any]
 
     def __init__(
-        self, document_id: str, content: str, metadata: Optional[Dict[str, Any]] = None
+        self,
+        document_id: str,
+        content: str,
+        metadata: Optional[Dict[str, Any]] = None,
     ):
         self.id: str = document_id
         self.content: str = content
@@ -45,7 +48,9 @@ class VectorDB:
             query_embedding = self.embedding_model.embed_query(query)
             _, indices = self.index.search(np.array([query_embedding]), top_k)
             return [
-                self.documents[str(i)] for i in indices[0] if str(i) in self.documents
+                self.documents[str(i)]
+                for i in indices[0]
+                if str(i) in self.documents
             ]
         except Exception as e:
             logging.error(f"Error during vector search: {str(e)}")
@@ -80,7 +85,9 @@ class VectorDB:
         self, query: str, top_k: int = 5, threshold: float = 0.1
     ) -> List[Document]:
         query_embedding = self.embedding_model.embed_query(query)
-        distances, indices = self.index.search(np.array([query_embedding]), top_k)
+        distances, indices = self.index.search(
+            np.array([query_embedding]), top_k
+        )
         return [
             self.documents[str(idx)]
             for dist, idx in zip(distances[0], indices[0])

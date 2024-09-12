@@ -33,13 +33,19 @@ def get_chat_model(model_name_or_instance, temperature=DEFAULT_TEMPERATURE):
         f"{model_name_or_instance}"
     )
 
-    if isinstance(model_name_or_instance, (ChatOpenAI, ChatAnthropic, ChatGroq)):
+    if isinstance(
+        model_name_or_instance, (ChatOpenAI, ChatAnthropic, ChatGroq)
+    ):
         logging.info("Returning existing model instance")
         return model_name_or_instance
 
     if not isinstance(model_name_or_instance, str):
-        logging.error(f"Unsupported chat model type: {type(model_name_or_instance)}")
-        raise ValueError(f"Unsupported chat model type: {type(model_name_or_instance)}")
+        logging.error(
+            f"Unsupported chat model type: {type(model_name_or_instance)}"
+        )
+        raise ValueError(
+            f"Unsupported chat model type: {type(model_name_or_instance)}"
+        )
 
     model_name = model_name_or_instance
     logging.info(f"Creating new model instance for: {model_name}")
@@ -49,13 +55,17 @@ def get_chat_model(model_name_or_instance, temperature=DEFAULT_TEMPERATURE):
             return ChatOpenAI(model=model_name, temperature=temperature)
         elif model_name.startswith("claude-"):
             return ChatAnthropic(model=model_name, temperature=temperature)
-        elif model_name.startswith("llama-") or model_name.startswith("llama3-groq-"):
+        elif model_name.startswith("llama-") or model_name.startswith(
+            "llama3-groq-"
+        ):
             return ChatGroq(model=model_name, temperature=temperature)
         else:
             logging.error(f"Unsupported chat model: {model_name}")
             raise ValueError(f"Unsupported chat model: {model_name}")
     except Exception as e:
-        logging.error(f"Error creating model instance for {model_name}: {str(e)}")
+        logging.error(
+            f"Error creating model instance for {model_name}: {str(e)}"
+        )
         raise ValueError(
             f"Error creating model instance for {model_name}: {str(e)}"
         ) from e

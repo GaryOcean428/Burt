@@ -41,6 +41,9 @@ def fix_json_string(json_string):
         return match.group(0).replace("\n", "\\n")
 
     fixed_string = re.sub(
-        r'(?<=: ")(.*?)(?=")', replace_unescaped_newlines, json_string, flags=re.DOTALL
+        r'(?<=: ")(.*?)(?=")',
+        replace_unescaped_newlines,
+        json_string,
+        flags=re.DOTALL,
     )
     return fixed_string
