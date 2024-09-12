@@ -41,7 +41,7 @@ nltk = "^3.9.1"
 python-docx = "^1.1.2"
 
 [tool.black]
-line-length = 88
+line-length = 79
 target-version = ['py38']
 include = '\.pyi?$'
 extend-exclude = '''
